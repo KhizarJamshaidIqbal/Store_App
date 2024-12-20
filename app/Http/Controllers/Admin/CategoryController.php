@@ -18,22 +18,18 @@ class CategoryController extends Controller
             // Get root categories with their nested children
             $categories = Category::whereNull('parent_id')
                 ->with(['childrenRecursive' => function($query) {
-                    $query->orderBy('sort_order');
+                    $query->whereNull('deleted_at')->orderBy('sort_order');
                 }])
+                ->whereNull('deleted_at')
                 ->orderBy('sort_order')
                 ->get();
 
-            // Get statistics
-            $stats = DB::table('categories')
-                ->whereNull('deleted_at')
-                ->selectRaw('
-                    COUNT(*) as total,
-                    SUM(CASE WHEN status = 1 THEN 1 ELSE 0 END) as active,
-                    SUM(CASE WHEN status = 0 THEN 1 ELSE 0 END) as inactive,
-                    SUM(CASE WHEN parent_id IS NULL THEN 1 ELSE 0 END) as parent,
-                    SUM(CASE WHEN parent_id IS NOT NULL THEN 1 ELSE 0 END) as sub
-                ')
-                ->first();
+            // Get statistics using Eloquent
+            $totalCategories = Category::count();
+            $activeCategories = Category::where('status', 1)->count();
+            $inactiveCategories = Category::where('status', 0)->count();
+            $parentCategories = Category::whereNull('parent_id')->count();
+            $subCategories = Category::whereNotNull('parent_id')->count();
 
             // Get all categories for parent filter
             $allCategories = Category::orderBy('name')->get();
@@ -41,16 +37,23 @@ class CategoryController extends Controller
             // Debug information
             \Log::info('Categories loaded:', [
                 'count' => $categories->count(),
-                'first_category' => $categories->first() ? $categories->first()->toArray() : null
+                'first_category' => $categories->first() ? $categories->first()->toArray() : null,
+                'stats' => [
+                    'total' => $totalCategories,
+                    'active' => $activeCategories,
+                    'inactive' => $inactiveCategories,
+                    'parent' => $parentCategories,
+                    'sub' => $subCategories
+                ]
             ]);
 
             return view('admin.categories.index', [
                 'categories' => $categories,
-                'totalCategories' => $stats->total ?? 0,
-                'activeCategories' => $stats->active ?? 0,
-                'inactiveCategories' => $stats->inactive ?? 0,
-                'parentCategories' => $stats->parent ?? 0,
-                'subCategories' => $stats->sub ?? 0,
+                'totalCategories' => $totalCategories,
+                'activeCategories' => $activeCategories,
+                'inactiveCategories' => $inactiveCategories,
+                'parentCategories' => $parentCategories,
+                'subCategories' => $subCategories,
                 'allCategories' => $allCategories
             ]);
         } catch (\Exception $e) {
