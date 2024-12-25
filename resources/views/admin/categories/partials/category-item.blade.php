@@ -1,69 +1,48 @@
-<!-- resources/views/admin/categories/partials/category-item.blade.php -->
-@php
-    $hasChildren = \App\Models\Category::where('parent_id', $category->id)->count() > 0;
-@endphp
-
-<div class="category-item group">
-    <div class="border border-gray-100 bg-white rounded-lg hover:bg-gray-50 transition-all duration-200">
-        <div class="category-header px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center gap-2">
-                <!-- Toggle Icon -->
-                <div class="w-6 h-6 flex items-center justify-center category-toggle cursor-pointer">
-                    @if($hasChildren)
-                        <i class="fas fa-chevron-down arrow-icon transition-transform duration-200 text-gray-400 group-hover:text-gray-600"></i>
-                    @endif
-                </div>
-
-                <!-- Category Name and Badge -->
-                <div class="flex items-center gap-3">
-                    <span class="category-name text-gray-700 font-medium">
-                        {!! str_repeat('- ', $level) !!}{{ $category->name }}
-                    </span>
-                    @if($category->status)
-                        <span class="status-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            Active
-                        </span>
-                    @else
-                        <span class="status-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                            Inactive
-                        </span>
-                    @endif
-                </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <a href="{{ route('admin.categories.edit', $category->id) }}" 
-                   class="inline-flex items-center px-3 py-1.5 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded-md transition-colors">
-                    <i class="fas fa-edit mr-1.5"></i>
-                    Edit
-                </a>
-                
-                <form action="{{ route('admin.categories.destroy', $category->id) }}" 
-                      method="POST" 
-                      class="inline-block delete-form">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" 
-                            class="inline-flex items-center px-3 py-1.5 text-sm bg-red-500 hover:bg-red-600 text-white rounded-md transition-colors">
-                        <i class="fas fa-trash mr-1.5"></i>
-                        Delete
-                    </button>
-                </form>
-            </div>
+{{-- resources/views/admin/categories/partials/category-item.blade.php --}}
+<div class="category-item" data-level="{{ $level }}">
+    <div class="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors duration-200">
+        <div class="flex items-center space-x-3">
+            @if($category->childrenRecursive->count() > 0)
+                <button class="category-toggle w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-chevron-right transform transition-transform duration-200"></i>
+                </button>
+            @else
+                <div class="w-6 h-6"></div>
+            @endif
+            
+            <i class="fas fa-folder {{ $level == 0 ? 'text-yellow-500' : ($level == 1 ? 'text-blue-500' : 'text-purple-500') }}"></i>
+            <span class="font-medium text-gray-700">{{ $category->name }}</span>
+            @if($category->status)
+                <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Active</span>
+            @else
+                <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">Inactive</span>
+            @endif
         </div>
-
-        @if($hasChildren)
-            <div class="children hidden border-t border-gray-100">
-                <div class="pl-8 border-l-2 border-gray-100 ml-7 my-1">
-                    @foreach(\App\Models\Category::where('parent_id', $category->id)->orderBy('order')->get() as $childCategory)
-                        @include('admin.categories.partials.category-item', [
-                            'category' => $childCategory,
-                            'level' => $level + 1
-                        ])
-                    @endforeach
-                </div>
-            </div>
-        @endif
+        
+        <div class="flex items-center space-x-2">
+            <a href="{{ route('admin.categories.edit', $category->id) }}" 
+               class="p-2 text-blue-500 hover:bg-blue-100 rounded-lg transition-colors duration-200">
+                <i class="fas fa-edit"></i>
+            </a>
+            <form action="{{ route('admin.categories.destroy', $category->id) }}" 
+                  method="POST" 
+                  class="inline-block"
+                  onsubmit="return confirm('Are you sure you want to delete this category?');">
+                @csrf
+                @method('DELETE')
+                <button type="submit" 
+                        class="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </form>
+        </div>
     </div>
+
+    @if($category->childrenRecursive->count() > 0)
+        <div class="category-children ml-8 mt-2 hidden">
+            @foreach($category->childrenRecursive as $child)
+                @include('admin.categories.partials.category-item', ['category' => $child, 'level' => $level + 1])
+            @endforeach
+        </div>
+    @endif
 </div>

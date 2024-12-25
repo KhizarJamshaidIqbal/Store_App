@@ -18,7 +18,12 @@ class CategoryController extends Controller
             // Get root categories with their nested children
             $categories = Category::whereNull('parent_id')
                 ->with(['childrenRecursive' => function($query) {
-                    $query->whereNull('deleted_at')->orderBy('sort_order');
+                    $query->whereNull('deleted_at')
+                        ->orderBy('sort_order')
+                        ->with(['childrenRecursive' => function($q) {
+                            $q->whereNull('deleted_at')
+                                ->orderBy('sort_order');
+                        }]);
                 }])
                 ->whereNull('deleted_at')
                 ->orderBy('sort_order')
@@ -34,28 +39,15 @@ class CategoryController extends Controller
             // Get all categories for parent filter
             $allCategories = Category::orderBy('name')->get();
 
-            // Debug information
-            \Log::info('Categories loaded:', [
-                'count' => $categories->count(),
-                'first_category' => $categories->first() ? $categories->first()->toArray() : null,
-                'stats' => [
-                    'total' => $totalCategories,
-                    'active' => $activeCategories,
-                    'inactive' => $inactiveCategories,
-                    'parent' => $parentCategories,
-                    'sub' => $subCategories
-                ]
-            ]);
-
-            return view('admin.categories.index', [
-                'categories' => $categories,
-                'totalCategories' => $totalCategories,
-                'activeCategories' => $activeCategories,
-                'inactiveCategories' => $inactiveCategories,
-                'parentCategories' => $parentCategories,
-                'subCategories' => $subCategories,
-                'allCategories' => $allCategories
-            ]);
+            return view('admin.categories.index', compact(
+                'categories',
+                'totalCategories',
+                'activeCategories',
+                'inactiveCategories',
+                'parentCategories',
+                'subCategories',
+                'allCategories'
+            ));
         } catch (\Exception $e) {
             \Log::error('Error in CategoryController@index: ' . $e->getMessage());
             return back()->with('error', 'An error occurred while loading categories.');

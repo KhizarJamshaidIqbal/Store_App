@@ -47,7 +47,9 @@ class Category extends Model
     public function childrenRecursive()
     {
         return $this->hasMany(Category::class, 'parent_id')
-            ->with('childrenRecursive')
+            ->with(['childrenRecursive' => function($query) {
+                $query->orderBy('sort_order');
+            }])
             ->orderBy('sort_order');
     }
 
