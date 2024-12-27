@@ -149,7 +149,7 @@
                         </label>
                         <textarea name="highlights"
                                   id="highlights"
-                                  rows="3"
+                                  rows="4"
                                   class="tinymce-editor"
                                   placeholder="Enter key features or highlights of the product"></textarea>
                         <p class="mt-1 text-sm text-gray-500">Add key features to make your product stand out</p>
