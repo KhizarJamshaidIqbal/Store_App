@@ -35,6 +35,7 @@ class CategoryController extends Controller
             $inactiveCategories = Category::where('status', 0)->count();
             $parentCategories = Category::whereNull('parent_id')->count();
             $subCategories = Category::whereNotNull('parent_id')->count();
+            $trashedCategories = Category::onlyTrashed()->count();
 
             // Get all categories for parent filter
             $allCategories = Category::orderBy('name')->get();
@@ -46,6 +47,7 @@ class CategoryController extends Controller
                 'inactiveCategories',
                 'parentCategories',
                 'subCategories',
+                'trashedCategories',
                 'allCategories'
             ));
         } catch (\Exception $e) {
@@ -160,6 +162,45 @@ class CategoryController extends Controller
         } catch (\Exception $e) {
             Log::error('Category Delete Error: ' . $e->getMessage());
             return back()->with('error', 'Error deleting category: ' . $e->getMessage());
+        }
+    }
+
+    public function trashed()
+    {
+        try {
+            $trashedCategories = Category::onlyTrashed()->get();
+            return view('admin.categories.trashed', compact('trashedCategories'));
+        } catch (\Exception $e) {
+            Log::error('Category Trashed Error: ' . $e->getMessage());
+            return back()->with('error', 'Error loading trashed categories: ' . $e->getMessage());
+        }
+    }
+
+    public function restore($id)
+    {
+        try {
+            $category = Category::onlyTrashed()->findOrFail($id);
+            $category->restore();
+            
+            return redirect()->route('admin.categories.trashed')
+                ->with('success', 'Category restored successfully.');
+        } catch (\Exception $e) {
+            Log::error('Category Restore Error: ' . $e->getMessage());
+            return back()->with('error', 'Error restoring category: ' . $e->getMessage());
+        }
+    }
+
+    public function forceDelete($id)
+    {
+        try {
+            $category = Category::onlyTrashed()->findOrFail($id);
+            $category->forceDelete();
+            
+            return redirect()->route('admin.categories.trashed')
+                ->with('success', 'Category permanently deleted.');
+        } catch (\Exception $e) {
+            Log::error('Category Force Delete Error: ' . $e->getMessage());
+            return back()->with('error', 'Error permanently deleting category: ' . $e->getMessage());
         }
     }
 

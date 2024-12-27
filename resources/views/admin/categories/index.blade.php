@@ -19,7 +19,7 @@
             </div>
 
             <!-- Statistics -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mt-6">
                 <div class="p-4 bg-gray-50 rounded-lg flex items-center space-x-3">
                     <div class="p-3 bg-blue-100 rounded-lg">
                         <i class="fas fa-layer-group text-blue-500"></i>
@@ -69,6 +69,16 @@
                         <div class="text-sm text-gray-500">Sub Categories</div>
                     </div>
                 </div>
+
+                <a href="{{ route('admin.categories.trashed') }}" class="p-4 bg-gray-50 hover:bg-gray-100 rounded-lg flex items-center space-x-3 transition-colors duration-200">
+                    <div class="p-3 bg-gray-200 rounded-lg">
+                        <i class="fas fa-trash-alt text-gray-600"></i>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-semibold text-gray-800">{{ $trashedCategories }}</div>
+                        <div class="text-sm text-gray-500">Deleted</div>
+                    </div>
+                </a>
             </div>
         </div>
 

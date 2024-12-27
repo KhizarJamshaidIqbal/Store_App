@@ -15,7 +15,22 @@ Route::prefix('admin')
     ->middleware(['auth'])
     ->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-        Route::resource('categories', CategoryController::class);
+
+        // Categories
+        Route::prefix('categories')->group(function () {
+            Route::get('/', [CategoryController::class, 'index'])->name('categories.index');
+            Route::get('/create', [CategoryController::class, 'create'])->name('categories.create');
+            Route::post('/', [CategoryController::class, 'store'])->name('categories.store');
+            Route::get('/{category}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
+            Route::put('/{category}', [CategoryController::class, 'update'])->name('categories.update');
+            Route::delete('/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
+
+            // Trashed Categories Routes
+            Route::get('/trashed', [CategoryController::class, 'trashed'])->name('categories.trashed');
+            Route::post('/{id}/restore', [CategoryController::class, 'restore'])->name('categories.restore');
+            Route::delete('/{id}/force-delete', [CategoryController::class, 'forceDelete'])->name('categories.force-delete');
+        });
+
         Route::resource('products', ProductController::class);
         Route::post('products/draft/{product}', [ProductController::class, 'saveAsDraft'])->name('products.draft');
     });

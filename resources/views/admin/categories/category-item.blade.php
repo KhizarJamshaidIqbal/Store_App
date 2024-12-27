@@ -34,17 +34,17 @@
 
             <!-- Actions -->
             <div class="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-all duration-200">
-                <a href="{{ route('admin.categories.edit', $category->id) }}" 
+                <a href="{{ route('admin.categories.edit', $category->id) }}"
                    class="p-2 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200">
                     <i class="fas fa-edit"></i>
                 </a>
-                <form action="{{ route('admin.categories.destroy', $category->id) }}" 
-                      method="POST" 
+                <form action="{{ route('admin.categories.destroy', $category->id) }}"
+                      method="POST"
                       class="inline-block"
                       onsubmit="return confirm('Are you sure you want to delete this category?');">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" 
+                    <button type="submit"
                             class="p-2 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 transition-all duration-200">
                         <i class="fas fa-trash-alt"></i>
                     </button>

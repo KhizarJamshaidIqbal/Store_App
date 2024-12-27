@@ -17,7 +17,7 @@ class ProductController extends Controller
     {
         $products = Product::with(['category', 'images'])->latest()->paginate(12);
         $categories = Category::whereNull('parent_id')->get();
-        
+
         return view('admin.products.index', compact('products', 'categories'));
     }
 
@@ -71,7 +71,7 @@ class ProductController extends Controller
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $index => $image) {
                     $path = $image->store('products', 'public');
-                    
+
                     ProductImage::create([
                         'product_id' => $product->id,
                         'image_path' => $path,
@@ -138,7 +138,7 @@ class ProductController extends Controller
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $index => $image) {
                     $path = $image->store('products', 'public');
-                    
+
                     ProductImage::create([
                         'product_id' => $product->id,
                         'image_path' => $path,
