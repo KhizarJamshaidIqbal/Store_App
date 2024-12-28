@@ -1,6 +1,6 @@
 {{-- resources/views/admin/categories/partials/category-item.blade.php --}}
 <div class="category-item mb-3" data-level="{{ $level }}">
-    <div class="flex items-center justify-between p-3 bg-gray-50 hover:bg-green-200 rounded-lg transition-colors duration-200">
+    <div class="flex items-center justify-between p-3 bg-white border border-gray-200 hover:bg-green-200 rounded-lg transition-colors duration-200">
         <div class="flex items-center space-x-3">
             @if($category->childrenRecursive->count() > 0)
                 <button class="category-toggle w-6 h-6 flex items-center justify-center text-gray-400 hover:text-gray-600">
