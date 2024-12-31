@@ -31,6 +31,8 @@ Route::prefix('admin')
             Route::delete('/{id}/force-delete', [CategoryController::class, 'forceDelete'])->name('categories.force-delete');
         });
 
+        Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
+        Route::post('/products', [ProductController::class, 'store'])->name('products.store');
         Route::resource('products', ProductController::class);
         Route::post('products/draft/{product}', [ProductController::class, 'saveAsDraft'])->name('products.draft');
     });
