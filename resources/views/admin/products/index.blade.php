@@ -1,5 +1,4 @@
-@extends('layouts.admin')
-
+@extends('admin.layouts.app')
 @section('content')
 <div class="container-fluid">
     <div class="row">
@@ -40,9 +39,9 @@
                                         <td>{{ $product->id }}</td>
                                         <td>
                                             @if($product->images->where('is_primary', true)->first())
-                                                <img src="{{ asset('storage/' . $product->images->where('is_primary', true)->first()->image_path) }}" 
-                                                     alt="{{ $product->name }}" 
-                                                     class="img-thumbnail" 
+                                                <img src="{{ asset('storage/' . $product->images->where('is_primary', true)->first()->image_path) }}"
+                                                     alt="{{ $product->name }}"
+                                                     class="img-thumbnail"
                                                      style="max-width: 50px;">
                                             @endif
                                         </td>
@@ -65,13 +64,13 @@
                                         </td>
                                         <td>
                                             <div class="btn-group">
-                                                <a href="{{ route('admin.products.edit', $product) }}" 
+                                                <a href="{{ route('admin.products.edit', $product) }}"
                                                    class="btn btn-sm btn-info">
                                                     Edit
                                                 </a>
                                                 @if(!$product->is_draft)
-                                                    <form action="{{ route('admin.products.draft', $product) }}" 
-                                                          method="POST" 
+                                                    <form action="{{ route('admin.products.draft', $product) }}"
+                                                          method="POST"
                                                           class="d-inline">
                                                         @csrf
                                                         <button type="submit" class="btn btn-sm btn-warning">
@@ -79,9 +78,9 @@
                                                         </button>
                                                     </form>
                                                 @endif
-                                                <form action="{{ route('admin.products.destroy', $product) }}" 
-                                                      method="POST" 
-                                                      class="d-inline" 
+                                                <form action="{{ route('admin.products.destroy', $product) }}"
+                                                      method="POST"
+                                                      class="d-inline"
                                                       onsubmit="return confirm('Are you sure you want to delete this product?');">
                                                     @csrf
                                                     @method('DELETE')

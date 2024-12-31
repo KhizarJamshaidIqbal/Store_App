@@ -12,7 +12,8 @@
 <script defer src="https://unpkg.com/alpinejs@3.13.3/dist/cdn.min.js"></script>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
+ <!-- Scripts -->
+ @vite(['resources/css/app.css', 'resources/js/app.js'])
     <!-- Custom Styles -->
     <style>
         [x-cloak] {
@@ -62,7 +63,8 @@
             @yield('content')
         </main>
     </div>
-
+    <!-- Scripts -->
     @stack('scripts')
+    {{-- @stack('scripts') --}}
 </body>
 </html>

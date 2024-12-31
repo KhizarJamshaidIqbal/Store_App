@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('admin.layouts.app')
 
 @section('content')
 <div class="container-fluid">
@@ -21,22 +21,23 @@
 
                     <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
-                        
+
                         <div class="row">
                             <!-- Basic Information -->
                             <div class="col-md-6">
                                 <h4>Basic Information</h4>
-                                
+
                                 <div class="form-group">
                                     <label for="name">Product Name *</label>
-                                    <input type="text" name="name" id="name" class="form-control @error('name') is-invalid @enderror" 
+                                    <input type="text" name="name" id="name" class="form-control @error('name') is-invalid @enderror"
                                            value="{{ old('name') }}" required>
                                 </div>
 
                                 <div class="form-group">
                                     <label for="slug">Slug *</label>
-                                    <input type="text" name="slug" id="slug" class="form-control @error('slug') is-invalid @enderror" 
-                                           value="{{ old('slug') }}" required>
+                                    <input type="text" name="slug" id="slug"
+                                        value="{{ old('slug') }}" class="form-control @error('slug') is-invalid @enderror"
+                                        required>
                                 </div>
 
                                 <div class="form-group">
@@ -53,13 +54,13 @@
 
                                 <div class="form-group">
                                     <label for="description">Description</label>
-                                    <textarea name="description" id="description" class="form-control @error('description') is-invalid @enderror" 
+                                    <textarea name="description" id="description" class="form-control @error('description') is-invalid @enderror"
                                               rows="4">{{ old('description') }}</textarea>
                                 </div>
 
                                 <div class="form-group">
                                     <label for="highlights">Highlights</label>
-                                    <textarea name="highlights" id="highlights" class="form-control @error('highlights') is-invalid @enderror" 
+                                    <textarea name="highlights" id="highlights" class="form-control @error('highlights') is-invalid @enderror"
                                               rows="4">{{ old('highlights') }}</textarea>
                                 </div>
                             </div>
@@ -67,28 +68,28 @@
                             <!-- Product Details -->
                             <div class="col-md-6">
                                 <h4>Product Details</h4>
-                                
+
                                 <div class="form-group">
                                     <label for="sku">SKU *</label>
-                                    <input type="text" name="sku" id="sku" class="form-control @error('sku') is-invalid @enderror" 
+                                    <input type="text" name="sku" id="sku" class="form-control @error('sku') is-invalid @enderror"
                                            value="{{ old('sku') }}" required>
                                 </div>
 
                                 <div class="form-group">
                                     <label for="shop_sku">Shop SKU</label>
-                                    <input type="text" name="shop_sku" id="shop_sku" class="form-control @error('shop_sku') is-invalid @enderror" 
+                                    <input type="text" name="shop_sku" id="shop_sku" class="form-control @error('shop_sku') is-invalid @enderror"
                                            value="{{ old('shop_sku') }}">
                                 </div>
 
                                 <div class="form-group">
                                     <label for="brand">Brand</label>
-                                    <input type="text" name="brand" id="brand" class="form-control @error('brand') is-invalid @enderror" 
+                                    <input type="text" name="brand" id="brand" class="form-control @error('brand') is-invalid @enderror"
                                            value="{{ old('brand') }}">
                                 </div>
 
                                 <div class="form-group">
                                     <label for="model">Model</label>
-                                    <input type="text" name="model" id="model" class="form-control @error('model') is-invalid @enderror" 
+                                    <input type="text" name="model" id="model" class="form-control @error('model') is-invalid @enderror"
                                            value="{{ old('model') }}">
                                 </div>
                             </div>
@@ -96,28 +97,28 @@
                             <!-- Product Specifications -->
                             <div class="col-md-6">
                                 <h4>Product Specifications</h4>
-                                
+
                                 <div class="form-group">
                                     <label for="texture">Texture</label>
-                                    <input type="text" name="texture" id="texture" class="form-control @error('texture') is-invalid @enderror" 
+                                    <input type="text" name="texture" id="texture" class="form-control @error('texture') is-invalid @enderror"
                                            value="{{ old('texture') }}">
                                 </div>
 
                                 <div class="form-group">
                                     <label for="color_family">Color Family</label>
-                                    <input type="text" name="color_family" id="color_family" class="form-control @error('color_family') is-invalid @enderror" 
+                                    <input type="text" name="color_family" id="color_family" class="form-control @error('color_family') is-invalid @enderror"
                                            value="{{ old('color_family') }}">
                                 </div>
 
                                 <div class="form-group">
                                     <label for="material">Material</label>
-                                    <input type="text" name="material" id="material" class="form-control @error('material') is-invalid @enderror" 
+                                    <input type="text" name="material" id="material" class="form-control @error('material') is-invalid @enderror"
                                            value="{{ old('material') }}">
                                 </div>
 
                                 <div class="form-group">
                                     <label for="features">Features</label>
-                                    <textarea name="features" id="features" class="form-control @error('features') is-invalid @enderror" 
+                                    <textarea name="features" id="features" class="form-control @error('features') is-invalid @enderror"
                                               rows="4">{{ old('features') }}</textarea>
                                 </div>
                             </div>
@@ -125,22 +126,22 @@
                             <!-- Pricing and Stock -->
                             <div class="col-md-6">
                                 <h4>Pricing and Stock</h4>
-                                
+
                                 <div class="form-group">
                                     <label for="price">Price *</label>
-                                    <input type="number" step="0.01" name="price" id="price" class="form-control @error('price') is-invalid @enderror" 
+                                    <input type="number" step="0.01" name="price" id="price" class="form-control @error('price') is-invalid @enderror"
                                            value="{{ old('price') }}" required>
                                 </div>
 
                                 <div class="form-group">
                                     <label for="special_price">Special Price</label>
-                                    <input type="number" step="0.01" name="special_price" id="special_price" class="form-control @error('special_price') is-invalid @enderror" 
+                                    <input type="number" step="0.01" name="special_price" id="special_price" class="form-control @error('special_price') is-invalid @enderror"
                                            value="{{ old('special_price') }}">
                                 </div>
 
                                 <div class="form-group">
                                     <label for="stock">Stock *</label>
-                                    <input type="number" name="stock" id="stock" class="form-control @error('stock') is-invalid @enderror" 
+                                    <input type="number" name="stock" id="stock" class="form-control @error('stock') is-invalid @enderror"
                                            value="{{ old('stock') }}" required>
                                 </div>
                             </div>
@@ -148,16 +149,16 @@
                             <!-- Shipping Information -->
                             <div class="col-md-6">
                                 <h4>Shipping Information</h4>
-                                
+
                                 <div class="form-group">
                                     <label for="weight">Weight (kg)</label>
-                                    <input type="number" step="0.01" name="weight" id="weight" class="form-control @error('weight') is-invalid @enderror" 
+                                    <input type="number" step="0.01" name="weight" id="weight" class="form-control @error('weight') is-invalid @enderror"
                                            value="{{ old('weight') }}">
                                 </div>
 
                                 <div class="form-group">
                                     <label for="package_weight">Package Weight (kg)</label>
-                                    <input type="number" step="0.01" name="package_weight" id="package_weight" class="form-control @error('package_weight') is-invalid @enderror" 
+                                    <input type="number" step="0.01" name="package_weight" id="package_weight" class="form-control @error('package_weight') is-invalid @enderror"
                                            value="{{ old('package_weight') }}">
                                 </div>
 
@@ -165,21 +166,21 @@
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <label for="package_length">Length (cm)</label>
-                                            <input type="number" step="0.01" name="package_length" id="package_length" class="form-control @error('package_length') is-invalid @enderror" 
+                                            <input type="number" step="0.01" name="package_length" id="package_length" class="form-control @error('package_length') is-invalid @enderror"
                                                    value="{{ old('package_length') }}">
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <label for="package_width">Width (cm)</label>
-                                            <input type="number" step="0.01" name="package_width" id="package_width" class="form-control @error('package_width') is-invalid @enderror" 
+                                            <input type="number" step="0.01" name="package_width" id="package_width" class="form-control @error('package_width') is-invalid @enderror"
                                                    value="{{ old('package_width') }}">
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="form-group">
                                             <label for="package_height">Height (cm)</label>
-                                            <input type="number" step="0.01" name="package_height" id="package_height" class="form-control @error('package_height') is-invalid @enderror" 
+                                            <input type="number" step="0.01" name="package_height" id="package_height" class="form-control @error('package_height') is-invalid @enderror"
                                                    value="{{ old('package_height') }}">
                                         </div>
                                     </div>
@@ -189,16 +190,16 @@
                             <!-- Additional Information -->
                             <div class="col-md-6">
                                 <h4>Additional Information</h4>
-                                
+
                                 <div class="form-group">
                                     <label for="country_of_origin">Country of Origin</label>
-                                    <input type="text" name="country_of_origin" id="country_of_origin" class="form-control @error('country_of_origin') is-invalid @enderror" 
+                                    <input type="text" name="country_of_origin" id="country_of_origin" class="form-control @error('country_of_origin') is-invalid @enderror"
                                            value="{{ old('country_of_origin') }}">
                                 </div>
 
                                 <div class="form-group">
                                     <label for="shelf_life">Shelf Life</label>
-                                    <input type="text" name="shelf_life" id="shelf_life" class="form-control @error('shelf_life') is-invalid @enderror" 
+                                    <input type="text" name="shelf_life" id="shelf_life" class="form-control @error('shelf_life') is-invalid @enderror"
                                            value="{{ old('shelf_life') }}">
                                 </div>
 
@@ -216,7 +217,7 @@
 
                                 <div class="form-group">
                                     <div class="custom-control custom-checkbox">
-                                        <input type="checkbox" class="custom-control-input" id="dangerous_goods" name="dangerous_goods" value="1" 
+                                        <input type="checkbox" class="custom-control-input" id="dangerous_goods" name="dangerous_goods" value="1"
                                                {{ old('dangerous_goods') ? 'checked' : '' }}>
                                         <label class="custom-control-label" for="dangerous_goods">Dangerous Goods</label>
                                     </div>
@@ -237,7 +238,7 @@
                                 <h4>Product Images</h4>
                                 <div class="form-group">
                                     <label for="images">Upload Images</label>
-                                    <input type="file" name="images[]" id="images" class="form-control-file @error('images.*') is-invalid @enderror" 
+                                    <input type="file" name="images[]" id="images" class="form-control-file @error('images.*') is-invalid @enderror"
                                            multiple accept="image/*">
                                     <small class="form-text text-muted">You can upload multiple images. The first image will be set as the primary image.</small>
                                 </div>
