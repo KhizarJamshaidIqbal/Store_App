@@ -242,6 +242,7 @@
                                            multiple accept="image/*">
                                     <small class="form-text text-muted">You can upload multiple images. The first image will be set as the primary image.</small>
                                 </div>
+                                <div id="imagePreview" class="row"></div>
                             </div>
 
                             <!-- Product Variants -->
@@ -269,6 +270,30 @@
 
 @push('scripts')
 <script>
+    // Image preview functionality
+    document.getElementById('images').addEventListener('change', function(e) {
+        const preview = document.getElementById('imagePreview');
+        preview.innerHTML = ''; // Clear existing previews
+        
+        Array.from(e.target.files).forEach((file, index) => {
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const div = document.createElement('div');
+                    div.className = 'col-md-2 col-sm-4 col-6 mb-3';
+                    div.innerHTML = `
+                        <div class="position-relative">
+                            <img src="${e.target.result}" class="img-thumbnail" alt="Preview">
+                            ${index === 0 ? '<span class="badge badge-primary position-absolute top-0 start-0 m-2">Primary</span>' : ''}
+                        </div>
+                    `;
+                    preview.appendChild(div);
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    });
+
     let variantCount = 0;
 
     // Initialize select2 for express delivery countries

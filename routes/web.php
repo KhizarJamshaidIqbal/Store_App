@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Models\ProductImage;
+use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
 
 // Authentication Routes
@@ -35,6 +37,12 @@ Route::prefix('admin')
         Route::post('/products', [ProductController::class, 'store'])->name('products.store');
         Route::resource('products', ProductController::class);
         Route::post('products/draft/{product}', [ProductController::class, 'saveAsDraft'])->name('products.draft');
+
+        // Product Image Management Routes
+        Route::post('/products/{product}/images', [ProductController::class, 'uploadImages'])->name('products.images.upload');
+        Route::post('/products/images/{image}/set-primary', [ProductController::class, 'setImageAsPrimary'])->name('products.images.set-primary');
+        Route::post('/products/images/reorder', [ProductController::class, 'updateImageOrder'])->name('products.images.reorder');
+        Route::delete('/products/images/{image}', [ProductController::class, 'deleteImage'])->name('products.images.delete');
     });
 
 // Redirect root to admin dashboard
@@ -46,3 +54,6 @@ Route::get('/', function () {
 Route::get('/home', function () {
     return redirect()->route('admin.dashboard');
 });
+
+Route::model('product', Product::class);
+Route::model('image', ProductImage::class);
