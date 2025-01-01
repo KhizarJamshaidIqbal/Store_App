@@ -61,7 +61,7 @@
         @endif
 
         <!-- Main Form -->
-        <form id="product-form" action="{{ route('admin.products.update', $product->id) }}" method="POST" enctype="multipart/form-data" class="space-y-8">
+        <form id="product-form" method="POST" action="{{ url('/admin/products') }}/{{ $product->id }}" enctype="multipart/form-data" class="space-y-8">
             @csrf
             @method('PUT')
 
@@ -96,16 +96,30 @@
                         </div>
 
                         <div class="sm:col-span-3">
-                            <label for="category_id" class="block text-sm font-medium text-gray-700">Category *</label>
+                            <label for="category" class="block text-sm font-medium text-gray-700">Category <span class="text-red-500">*</span></label>
                             <div class="mt-1">
-                                <select id="category_id" name="category_id" required
-                                    class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
-                                    @foreach($categories as $category)
-                                        <option value="{{ $category->id }}" {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
-                                            {{ $category->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                                @php
+                                    $selectedCategories = [];
+                                    if ($product->category_id && $product->category) {
+                                        $selectedCategories[] = [
+                                            'id' => $product->category_id,
+                                            'name' => $product->category->name
+                                        ];
+                                    }
+                                    if (old('category_id')) {
+                                        $oldCategory = $categories->firstWhere('id', old('category_id'));
+                                        if ($oldCategory) {
+                                            $selectedCategories = [[
+                                                'id' => $oldCategory->id,
+                                                'name' => $oldCategory->name
+                                            ]];
+                                        }
+                                    }
+                                @endphp
+                                <x-admin.category-selector 
+                                    :categories="$categories"
+                                    :selected-categories="$selectedCategories"
+                                />
                             </div>
                         </div>
 
@@ -122,19 +136,17 @@
                         </div>
 
                         <div class="sm:col-span-6">
-                            <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                            <label for="description" class="block text-sm font-medium text-gray-700">Description <span class="text-red-500">*</span></label>
                             <div class="mt-1">
-                                <textarea id="description" name="description" rows="4"
-                                    class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">{{ old('description', $product->description) }}</textarea>
+                                <textarea id="description" name="description" class="editor">{{ old('description', $product->description) }}</textarea>
                             </div>
                             <p class="mt-2 text-sm text-gray-500">Brief description of the product.</p>
                         </div>
 
                         <div class="sm:col-span-6">
-                            <label for="highlights" class="block text-sm font-medium text-gray-700">Highlights</label>
+                            <label for="highlights" class="block text-sm font-medium text-gray-700">Highlights <span class="text-red-500">*</span></label>
                             <div class="mt-1">
-                                <textarea id="highlights" name="highlights" rows="4"
-                                    class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">{{ old('highlights', $product->highlights) }}</textarea>
+                                <textarea id="highlights" name="highlights" class="editor">{{ old('highlights', $product->highlights) }}</textarea>
                             </div>
                             <p class="mt-2 text-sm text-gray-500">Key features and highlights of the product.</p>
                         </div>
@@ -272,13 +284,9 @@
                             <div class="mt-1">
                                 <select multiple id="express_delivery_countries" name="express_delivery_countries[]"
                                     class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
-                                    @php
-                                        $selectedCountries = old('express_delivery_countries', json_decode($product->express_delivery_countries, true) ?? []);
-                                    @endphp
-                                    <option value="United States" {{ in_array('United States', $selectedCountries) ? 'selected' : '' }}>United States</option>
-                                    <option value="United Kingdom" {{ in_array('United Kingdom', $selectedCountries) ? 'selected' : '' }}>United Kingdom</option>
-                                    <option value="Canada" {{ in_array('Canada', $selectedCountries) ? 'selected' : '' }}>Canada</option>
-                                    <option value="Australia" {{ in_array('Australia', $selectedCountries) ? 'selected' : '' }}>Australia</option>
+                                    @foreach(['United States', 'United Kingdom', 'Canada', 'Australia'] as $country)
+                                        <option value="{{ $country }}" {{ in_array($country, old('express_delivery_countries', json_decode($product->express_delivery_countries, true) ?? [])) ? 'selected' : '' }}>{{ $country }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             <p class="mt-2 text-sm text-gray-500">Hold Ctrl/Cmd to select multiple countries</p>
@@ -561,6 +569,7 @@
                                         const response = JSON.parse(xhr.responseText);
                                         if (response.success) {
                                             showNotification(response.message, 'success');
+                                            // Refresh the page to show uploaded images
                                             setTimeout(() => window.location.reload(), 1000);
                                         } else {
                                             throw new Error(response.message || 'Upload failed');
@@ -677,148 +686,111 @@
                     let variantCounter = {{ count($product->variants ?? []) }};
 
                     // Save product with variants
-                    document.getElementById('product-form').addEventListener('submit', function(e) {
+                    document.getElementById('product-form').addEventListener('submit', async function(e) {
                         e.preventDefault();
+                        
+                        const form = this;
+                        const submitButton = form.querySelector('[type="submit"]');
+                        const originalText = submitButton.innerHTML;
+                        submitButton.disabled = true;
+                        submitButton.innerHTML = 'Updating...';
 
-                        const formData = new FormData(this);
-
-                        // Convert FormData to JSON
-                        const jsonData = {};
-                        for (const [key, value] of formData.entries()) {
-                            // Handle array notation in form field names
-                            if (key.includes('[') && key.includes(']')) {
-                                const matches = key.match(/^([^\[]+)\[(\d+)\]\[([^\]]+)\]$/);
-                                if (matches) {
-                                    const [_, arrayName, index, fieldName] = matches;
-                                    if (!jsonData[arrayName]) {
-                                        jsonData[arrayName] = [];
+                        try {
+                            // Get the product ID from the URL
+                            const productId = {{ $product->id }};
+                            const formData = new FormData(form);
+                            const jsonData = {};
+                            
+                            // Convert FormData to object
+                            for (let [key, value] of formData.entries()) {
+                                if (key === '_token' || key === '_method') continue;
+                                
+                                if (key.includes('variants[')) {
+                                    const matches = key.match(/variants\[(\d+)\]\[([^\]]+)\]/);
+                                    if (matches) {
+                                        const [_, index, field] = matches;
+                                        if (!jsonData.variants) jsonData.variants = [];
+                                        if (!jsonData.variants[index]) jsonData.variants[index] = {};
+                                        jsonData.variants[index][field] = value;
                                     }
-                                    if (!jsonData[arrayName][index]) {
-                                        jsonData[arrayName][index] = {};
-                                    }
-                                    jsonData[arrayName][index][fieldName] = value;
                                 } else {
                                     jsonData[key] = value;
                                 }
-                            } else {
-                                jsonData[key] = value;
                             }
-                        }
 
-                        // Clean up variants array (remove empty slots)
-                        if (jsonData.variants) {
-                            jsonData.variants = Object.values(jsonData.variants).filter(v => v && v.name);
-                        }
-
-                        // Send AJAX request
-                        fetch('{{ route("admin.products.update", $product->id) }}', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                                'Accept': 'application/json'
-                            },
-                            body: JSON.stringify(jsonData)
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                showNotification(data.message, 'success');
-                                // Optionally refresh the page or update the UI
-                                setTimeout(() => {
-                                    window.location.reload();
-                                }, 1000);
-                            } else {
-                                throw new Error(data.message || 'Failed to update product');
+                            // Clean up variants array
+                            if (jsonData.variants) {
+                                jsonData.variants = jsonData.variants.filter(Boolean);
                             }
-                        })
-                        .catch(error => {
+
+                            // Make the request to the correct URL
+                            const url = `{{ url('/admin/products') }}/${productId}`;
+                            const response = await fetch(url, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                    'Accept': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    ...jsonData,
+                                    _token: formData.get('_token'),
+                                    _method: 'PUT'
+                                })
+                            });
+
+                            // Handle the response
+                            if (!response.ok) {
+                                const text = await response.text();
+                                console.error('Server response:', text);
+                                throw new Error('Server error: ' + response.status);
+                            }
+
+                            const result = await response.json();
+
+                            if (result.success) {
+                                showNotification(result.message || 'Product updated successfully', 'success');
+                                
+                                // Update category display if available
+                                if (result.data?.category) {
+                                    const categorySelector = document.querySelector('[x-data]');
+                                    if (categorySelector) {
+                                        const alpineData = Alpine.$data(categorySelector);
+                                        if (alpineData) {
+                                            alpineData.selectedCategory = {
+                                                id: result.data.category.id,
+                                                name: result.data.category.name
+                                            };
+                                            // Update the hidden input if it exists
+                                            const hiddenInput = categorySelector.querySelector('[x-ref="hiddenInput"]');
+                                            if (hiddenInput) {
+                                                hiddenInput.value = result.data.category.id;
+                                            } else {
+                                                console.warn('Hidden input not found');
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                throw new Error(result.message || 'Failed to update product');
+                            }
+                        } catch (error) {
                             console.error('Error:', error);
                             showNotification(error.message || 'Failed to update product', 'error');
-                        });
+                        } finally {
+                            submitButton.disabled = false;
+                            submitButton.innerHTML = originalText;
+                        }
                     });
-
-                    function addVariant() {
-                        variantCounter++;
-
-                        const variantTemplate = `
-                            <div class="variant-row border rounded-lg p-4 mb-4 bg-white" data-variant-id="${variantCounter}">
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Variant Name</label>
-                                        <input type="text" name="variants[${variantCounter}][name]" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Value</label>
-                                        <input type="text" name="variants[${variantCounter}][value]" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Status</label>
-                                        <select name="variants[${variantCounter}][status]" class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                            <option value="active">Active</option>
-                                            <option value="inactive">Inactive</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Price ($)</label>
-                                        <div class="mt-1 relative rounded-md shadow-sm">
-                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <span class="text-gray-500 sm:text-sm">$</span>
-                                            </div>
-                                            <input type="number" step="0.01" name="variants[${variantCounter}][price]" class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md" required>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Special Price ($)</label>
-                                        <div class="mt-1 relative rounded-md shadow-sm">
-                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <span class="text-gray-500 sm:text-sm">$</span>
-                                            </div>
-                                            <input type="number" step="0.01" name="variants[${variantCounter}][special_price]" class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md">
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Stock</label>
-                                        <input type="number" name="variants[${variantCounter}][stock]" class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
-                                    </div>
-                                </div>
-                                <div class="mt-4 text-right">
-                                    <button type="button" onclick="removeVariant(${variantCounter})"
-                                        class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                                        <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                        Remove Variant
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-
-                        const variantsContainer = document.getElementById('variants-container');
-                        if (variantsContainer) {
-                            variantsContainer.insertAdjacentHTML('beforeend', variantTemplate);
-                        }
-                    }
-
-                    function removeVariant(variantId) {
-                        const variantElement = document.querySelector(`[data-variant-id="${variantId}"]`);
-                        if (variantElement && confirm('Are you sure you want to remove this variant?')) {
-                            variantElement.remove();
-                        }
-                    }
 
                     function showNotification(message, type = 'success') {
                         const notification = document.createElement('div');
-                        notification.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg text-white ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} transition-opacity duration-500 z-50`;
+                        notification.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg text-white ${
+                            type === 'success' ? 'bg-green-500' : 'bg-red-500'
+                        }`;
                         notification.textContent = message;
                         document.body.appendChild(notification);
-
-                        setTimeout(() => {
-                            notification.style.opacity = '0';
-                            setTimeout(() => notification.remove(), 500);
-                        }, 3000);
+                        setTimeout(() => notification.remove(), 3000);
                     }
                 </script>
                 @endpush
@@ -828,7 +800,7 @@
                     <div>
                         <h3 class="text-lg leading-6 font-medium text-gray-900 flex items-center">
                             <svg class="h-5 w-5 text-gray-400 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
                             Package Information
                         </h3>
@@ -895,159 +867,281 @@
                 </div>
 
                 <!-- Form Actions -->
-                <div class="px-6 py-4 bg-gray-50 flex items-center justify-between rounded-b-lg">
-                    <button type="button" onclick="window.location.href='{{ route('admin.products.index') }}'"
-                        class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <div class="fixed bottom-0 left-0 right-0 bg-gray-50 px-6 py-4 flex justify-end space-x-4 border-t border-gray-200">
+                    <button type="button" class="px-4 py-2 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         Cancel
                     </button>
-                    <div class="flex space-x-3">
-                        <button type="submit" name="action" value="save_draft"
-                            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            Save as Draft
-                        </button>
-                        <button type="submit" name="action" value="publish"
-                            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            Update Product
-                        </button>
-                    </div>
+                    <button type="button" class="px-4 py-2 bg-gray-200 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Save as Draft
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Update Product
+                    </button>
                 </div>
             </div>
         </form>
     </div>
 </div>
 
+@push('styles')
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+<style>
+    .ts-wrapper {
+        min-height: 38px;
+    }
+    .ts-control {
+        border-radius: 0.375rem;
+        border-color: #D1D5DB;
+        min-height: 38px;
+        padding: 0.375rem 0.75rem;
+    }
+    .ts-dropdown {
+        border-radius: 0.375rem;
+        border-color: #D1D5DB;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    .ts-dropdown .active {
+        background-color: #2563EB;
+        color: white;
+    }
+    .ts-dropdown .option {
+        padding: 0.5rem 0.75rem;
+    }
+    .ts-control > input {
+        min-height: 34px;
+    }
+    .ts-wrapper.multi .ts-control > div {
+        background: #EFF6FF;
+        color: #2563EB;
+        border: 1px solid #BFDBFE;
+        border-radius: 0.25rem;
+        padding: 0.125rem 0.5rem;
+    }
+</style>
+@endpush
+
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 <script>
-    // Initialize Sortable
-    function initializeSortable() {
-        const gallery = document.getElementById('image-gallery');
-        if (gallery) {
-            new Sortable(gallery, {
-                animation: 150,
-                ghostClass: 'bg-gray-100',
-                onEnd: function() {
-                    updateImageOrder();
+    document.addEventListener('DOMContentLoaded', function() {
+        new TomSelect('#category', {
+            plugins: ['remove_button', 'clear_button'],
+            maxItems: null,
+            valueField: 'value',
+            labelField: 'text',
+            searchField: ['text'],
+            create: false,
+            render: {
+                option: function(data, escape) {
+                    return '<div class="py-2 px-3">' + escape(data.text) + '</div>';
+                },
+                item: function(data, escape) {
+                    return '<div>' + escape(data.text) + '</div>';
                 }
+            }
+        });
+    });
+</script>
+@endpush
+
+@push('scripts')
+<script>
+    // Function to generate slug from text
+    function generateSlug(text) {
+        return text
+            .toString()
+            .toLowerCase()
+            .trim()
+            .replace(/\s+/g, '-')           // Replace spaces with -
+            .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+            .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+            .replace(/^-+/, '')             // Trim - from start of text
+            .replace(/-+$/, '');            // Trim - from end of text
+    }
+
+    // Auto-generate slug from product name
+    document.getElementById('name').addEventListener('input', function(e) {
+        const slugInput = document.getElementById('slug');
+        if (slugInput) {
+            slugInput.value = generateSlug(e.target.value);
+        }
+    });
+
+    // Handle form submission
+    document.getElementById('product-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const form = this;
+        const submitButton = form.querySelector('[type="submit"]');
+        const originalText = submitButton.innerHTML;
+        submitButton.disabled = true;
+        submitButton.innerHTML = 'Updating...';
+
+        try {
+            const formData = new FormData(form);
+            const jsonData = {};
+            
+            // Handle multiple select fields
+            const expressDeliverySelect = document.getElementById('express_delivery_countries');
+            const selectedCountries = Array.from(expressDeliverySelect.selectedOptions).map(option => option.value);
+            
+            // Convert FormData to object
+            for (let [key, value] of formData.entries()) {
+                if (key === '_token' || key === '_method') continue;
+                
+                if (key.includes('variants[')) {
+                    const matches = key.match(/variants\[(\d+)\]\[([^\]]+)\]/);
+                    if (matches) {
+                        const [_, index, field] = matches;
+                        if (!jsonData.variants) jsonData.variants = [];
+                        if (!jsonData.variants[index]) jsonData.variants[index] = {};
+                        jsonData.variants[index][field] = value;
+                    }
+                } else if (key === 'express_delivery_countries[]') {
+                    // Skip as we'll handle it separately
+                    continue;
+                } else {
+                    jsonData[key] = value;
+                }
+            }
+
+            // Add express delivery countries
+            jsonData.express_delivery_countries = selectedCountries;
+
+            // Clean up variants array
+            if (jsonData.variants) {
+                jsonData.variants = jsonData.variants.filter(Boolean);
+            }
+
+            // Construct the correct URL
+            const productId = {{ $product->id }};
+            const url = `{{ url('/admin/products') }}/${productId}`;
+
+            console.log('Submitting data:', jsonData); // Debug log
+
+            // Make the request
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    ...jsonData,
+                    _method: 'PUT'
+                })
             });
-        }
-    }
 
-    // Initialize on page load
-    initializeSortable();
-
-    // Update image order
-    function updateImageOrder() {
-        const gallery = document.getElementById('image-gallery');
-        if (!gallery) return;
-
-        const images = gallery.querySelectorAll('[data-id]');
-        const order = Array.from(images).map(img => img.dataset.id);
-
-        fetch('/admin/products/images/reorder', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            },
-            body: JSON.stringify({ image_order: order })
-        })
-        .then(response => {
+            // Handle the response
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                const text = await response.text();
+                console.error('Server response:', text);
+                throw new Error('Server error: ' + response.status);
             }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                showNotification('Image order updated successfully', 'success');
-                if (data.images) {
-                    rebuildGallery(data.images);
+
+            const result = await response.json();
+
+            if (result.success) {
+                showNotification(result.message || 'Product updated successfully', 'success');
+                
+                // Update category display if available
+                if (result.data?.category) {
+                    const categorySelector = document.querySelector('[x-data]');
+                    if (categorySelector) {
+                        const alpineData = Alpine.$data(categorySelector);
+                        if (alpineData) {
+                            alpineData.selectedCategory = {
+                                id: result.data.category.id,
+                                name: result.data.category.name
+                            };
+                        }
+                    }
                 }
             } else {
-                throw new Error(data.message || 'Failed to update image order');
+                throw new Error(result.message || 'Failed to update product');
             }
-        })
-        .catch(error => {
+        } catch (error) {
             console.error('Error:', error);
-            showNotification(error.message || 'Failed to update image order', 'error');
+            showNotification(error.message || 'Failed to update product', 'error');
+        } finally {
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalText;
+        }
+    });
+
+    function showNotification(message, type = 'success') {
+        const notification = document.createElement('div');
+        notification.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg text-white ${
+            type === 'success' ? 'bg-green-500' : 'bg-red-500'
+        }`;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        setTimeout(() => notification.remove(), 3000);
+    }
+</script>
+@endpush
+
+@push('scripts')
+<script>
+    // Initialize Sortable for image reordering
+    const imageGallery = document.getElementById('image-gallery');
+    if (imageGallery) {
+        new Sortable(imageGallery, {
+            animation: 150,
+            ghostClass: 'bg-blue-100',
+            onEnd: function(evt) {
+                const imageIds = Array.from(imageGallery.children).map((el, index) => ({
+                    id: parseInt(el.dataset.id),
+                    order: index
+                }));
+
+                // Send the new order to the server
+                fetch('{{ route("admin.products.images.reorder") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ order: imageIds })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => Promise.reject(err));
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        showNotification('Image order updated successfully', 'success');
+                    } else {
+                        throw new Error(data.message || 'Failed to update image order');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification(error.message || 'Failed to update image order', 'error');
+                });
+            }
         });
     }
 
-    // Delete image function
-    function deleteImage(index, imageId) {
-        if (!confirm('Are you sure you want to delete this image?')) {
-            return;
-        }
-
-        fetch(`/admin/products/images/${imageId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                // Remove the deleted image from the gallery
-                const imageElement = document.querySelector(`[data-id="${imageId}"]`);
-                if (imageElement) {
-                    imageElement.remove();
-                }
-
-                // Update image count
-                const countBadge = document.querySelector('.image-count');
-                if (countBadge) {
-                    const currentCount = parseInt(countBadge.textContent);
-                    countBadge.textContent = `${currentCount - 1} Images`;
-                }
-
-                // Rebuild gallery with remaining images
-                if (data.images) {
-                    rebuildGallery(data.images);
-                }
-                showNotification('Image deleted successfully', 'success');
-            } else {
-                throw new Error(data.message || 'Failed to delete image');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification(error.message || 'Failed to delete image', 'error');
-        });
-    }
-
-    // Set primary image function
+    // Function to set primary image
     function setPrimaryImage(imageId) {
-        if (!confirm('Set this as the primary image?')) {
-            return;
-        }
-
         fetch(`/admin/products/images/${imageId}/set-primary`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
             }
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
             if (data.success) {
-                if (data.images) {
-                    rebuildGallery(data.images);
-                }
-                showNotification('Primary image set successfully', 'success');
+                showNotification('Primary image updated successfully', 'success');
+                // Refresh the page to show updated primary image
+                window.location.reload();
             } else {
                 throw new Error(data.message || 'Failed to set primary image');
             }
@@ -1058,78 +1152,75 @@
         });
     }
 
-    // Helper function to rebuild the gallery
-    function rebuildGallery(images) {
-        const gallery = document.getElementById('image-gallery');
-        if (!gallery) return;
-
-        // Store existing elements to preserve event listeners
-        const imageElements = {};
-        gallery.querySelectorAll('[data-id]').forEach(el => {
-            imageElements[el.dataset.id] = el.cloneNode(true);
-        });
-
-        // Clear gallery
-        gallery.innerHTML = '';
-
-        // Rebuild gallery with the new order
-        images.forEach(image => {
-            let element = imageElements[image.id];
-
-            if (element) {
-                // Remove any existing primary badge
-                const existingBadge = element.querySelector('.primary-badge');
-                if (existingBadge) {
-                    existingBadge.remove();
+    // Function to delete image
+    function deleteImage(index, imageId) {
+        if (confirm('Are you sure you want to delete this image?')) {
+            fetch(`/admin/products/images/${imageId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                 }
-
-                // Add primary badge if this is the primary image
-                if (image.is_primary) {
-                    const primaryBadge = document.createElement('span');
-                    primaryBadge.className = 'primary-badge inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800';
-                    primaryBadge.textContent = 'Primary';
-
-                    // Find the footer div and add the badge there
-                    const footer = element.querySelector('.p-3');
-                    if (footer) {
-                        const badgeContainer = footer.querySelector('.flex');
-                        if (badgeContainer) {
-                            badgeContainer.appendChild(primaryBadge);
-                        }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Remove the image element from the DOM
+                    const imageElement = document.querySelector(`[data-id="${imageId}"]`);
+                    if (imageElement) {
+                        imageElement.remove();
                     }
+                    showNotification('Image deleted successfully', 'success');
+                } else {
+                    throw new Error(data.message || 'Failed to delete image');
                 }
-
-                // Reattach event listeners
-                element.querySelector('[onclick*="deleteImage"]')?.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    deleteImage(null, image.id);
-                });
-
-                element.querySelector('[onclick*="setPrimaryImage"]')?.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    setPrimaryImage(image.id);
-                });
-
-                gallery.appendChild(element);
-            }
-        });
-
-        // Reinitialize Sortable
-        initializeSortable();
-    }
-
-    // Show notification function
-    function showNotification(message, type = 'success') {
-        const notification = document.createElement('div');
-        notification.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg text-white ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} transition-opacity duration-500 z-50`;
-        notification.textContent = message;
-        document.body.appendChild(notification);
-
-        setTimeout(() => {
-            notification.style.opacity = '0';
-            setTimeout(() => notification.remove(), 500);
-        }, 3000);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification(error.message || 'Failed to delete image', 'error');
+            });
+        }
     }
 </script>
 @endpush
+
+@push('scripts')
+<script>
+    // Initialize TinyMCE for both Description and Highlights fields
+    document.addEventListener('DOMContentLoaded', function() {
+        tinymce.init({
+            selector: '.editor',
+            height: 300,
+            menubar: false,
+            plugins: [
+                'advlist', 'autolink', 'lists', 'link', 'charmap',
+                'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                'insertdatetime', 'table', 'wordcount'
+            ],
+            toolbar: 'fontfamily fontsize | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent',
+            toolbar_mode: 'wrap',
+            font_family_formats: 'Arial=arial,helvetica,sans-serif; Times New Roman=times new roman,times,serif',
+            font_size_formats: '8pt 10pt 12pt 14pt 16pt 18pt 24pt 36pt',
+            content_style: `
+                body {
+                    font-family: Arial, sans-serif;
+                    font-size: 14px;
+                    line-height: 1.6;
+                    color: #333;
+                    padding: 0.5rem;
+                }
+            `,
+            branding: false,
+            statusbar: false,
+            resize: false,
+            setup: function(editor) {
+                editor.on('change', function() {
+                    editor.save();
+                });
+            }
+        });
+    });
+</script>
+@endpush
+
 @endsection

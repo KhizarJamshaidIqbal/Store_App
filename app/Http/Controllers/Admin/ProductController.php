@@ -192,12 +192,36 @@ class ProductController extends Controller
             // Validate the request
             $validatedData = $request->validate([
                 'name' => 'required|string|max:255',
-                'description' => 'required|string',
+                'slug' => 'required|string|max:255|unique:products,slug,' . $product->id,
+                'category_id' => 'required|exists:categories,id',
+                'description' => 'nullable|string',
+                'highlights' => 'nullable|string',
+                'sku' => 'required|string|unique:products,sku,' . $product->id,
+                'shop_sku' => 'nullable|string',
+                'brand' => 'nullable|string',
+                'model' => 'nullable|string',
+                'texture' => 'nullable|string',
+                'color_family' => 'nullable|string',
+                'country_of_origin' => 'nullable|string',
+                'pack_type' => 'nullable|string',
+                'volume' => 'nullable|string',
+                'weight' => 'nullable|numeric',
+                'material' => 'nullable|string',
+                'features' => 'nullable|string',
+                'express_delivery_countries' => 'nullable|array',
+                'express_delivery_countries.*' => 'string',
+                'brand_classification' => 'nullable|string',
+                'shelf_life' => 'nullable|string',
                 'price' => 'required|numeric|min:0',
                 'special_price' => 'nullable|numeric|min:0',
                 'stock' => 'required|integer|min:0',
-                'status' => 'required|in:active,inactive',
-                'category_id' => 'required|exists:categories,id',
+                'package_weight' => 'nullable|numeric',
+                'package_length' => 'nullable|numeric',
+                'package_width' => 'nullable|numeric',
+                'package_height' => 'nullable|numeric',
+                'dangerous_goods' => 'boolean',
+                'is_draft' => 'boolean',
+                'status' => 'required|string|in:active,inactive,draft',
                 'variants' => 'nullable|array',
                 'variants.*.name' => 'required|string|max:255',
                 'variants.*.value' => 'required|string|max:255',
@@ -210,12 +234,35 @@ class ProductController extends Controller
             // Update product
             $product->update([
                 'name' => $validatedData['name'],
+                'slug' => $validatedData['slug'],
+                'category_id' => $validatedData['category_id'],
                 'description' => $validatedData['description'],
+                'highlights' => $validatedData['highlights'],
+                'sku' => $validatedData['sku'],
+                'shop_sku' => $validatedData['shop_sku'],
+                'brand' => $validatedData['brand'],
+                'model' => $validatedData['model'],
+                'texture' => $validatedData['texture'],
+                'color_family' => $validatedData['color_family'],
+                'country_of_origin' => $validatedData['country_of_origin'],
+                'pack_type' => $validatedData['pack_type'],
+                'volume' => $validatedData['volume'],
+                'weight' => $validatedData['weight'],
+                'material' => $validatedData['material'],
+                'features' => $validatedData['features'],
+                'express_delivery_countries' => json_encode($validatedData['express_delivery_countries'] ?? []),
+                'brand_classification' => $validatedData['brand_classification'],
+                'shelf_life' => $validatedData['shelf_life'],
                 'price' => $validatedData['price'],
                 'special_price' => $validatedData['special_price'],
                 'stock' => $validatedData['stock'],
-                'status' => $validatedData['status'],
-                'category_id' => $validatedData['category_id'],
+                'package_weight' => $validatedData['package_weight'],
+                'package_length' => $validatedData['package_length'],
+                'package_width' => $validatedData['package_width'],
+                'package_height' => $validatedData['package_height'],
+                'dangerous_goods' => $request->has('dangerous_goods'),
+                'is_draft' => $request->has('is_draft'),
+                'status' => $validatedData['status']
             ]);
 
             // Handle variants
@@ -238,17 +285,36 @@ class ProductController extends Controller
 
             DB::commit();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Product updated successfully',
-                'product' => $product->load('variants')
-            ]);
+            if ($request->expectsJson()) {
+                $product->load(['variants', 'category']);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Product updated successfully',
+                    'data' => [
+                        'product' => $product,
+                        'category' => [
+                            'id' => $product->category->id,
+                            'name' => $product->category->name
+                        ]
+                    ]
+                ]);
+            }
+
+            return redirect()->route('admin.products.index')
+                ->with('success', 'Product updated successfully!');
+
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update product: ' . $e->getMessage()
-            ], 500);
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update product: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return back()->withInput()
+                ->withErrors(['error' => 'Failed to update product: ' . $e->getMessage()]);
         }
     }
 
@@ -433,30 +499,33 @@ class ProductController extends Controller
     {
         try {
             $request->validate([
-                'image_order' => 'required|array',
-                'image_order.*' => 'required|integer|exists:product_images,id'
+                'order' => 'required|array',
+                'order.*.id' => 'required|exists:product_images,id',
+                'order.*.order' => 'required|integer|min:0'
             ]);
 
-            $images = $request->input('image_order');
+            $images = $request->input('order');
             
             // Update each image's sort order
-            foreach ($images as $index => $imageId) {
-                ProductImage::where('id', $imageId)->update(['sort_order' => $index]);
+            foreach ($images as $image) {
+                ProductImage::where('id', $image['id'])->update(['sort_order' => $image['order']]);
             }
 
-            // Get the updated images
-            $firstImage = ProductImage::find($images[0]);
-            if ($firstImage) {
-                $updatedImages = $firstImage->product->images()
-                    ->orderBy('is_primary', 'desc')
-                    ->orderBy('sort_order')
-                    ->get();
+            // Get the first image from the order
+            if (count($images) > 0) {
+                $firstImage = ProductImage::find($images[0]['id']);
+                if ($firstImage) {
+                    $updatedImages = $firstImage->product->images()
+                        ->orderBy('is_primary', 'desc')
+                        ->orderBy('sort_order')
+                        ->get();
 
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Image order updated successfully',
-                    'images' => $updatedImages
-                ]);
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Image order updated successfully',
+                        'images' => $updatedImages
+                    ]);
+                }
             }
 
             return response()->json([
