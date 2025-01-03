@@ -1,7 +1,7 @@
 @props(['categories', 'selectedCategories' => []])
 
-<div 
-    x-data="{ 
+<div
+    x-data="{
         selectedCategory: @if($selectedCategories && count($selectedCategories) > 0)
             @json($selectedCategories[0])
         @else
@@ -10,7 +10,7 @@
         isOpen: false,
         search: '',
         categories: @json($categories),
-        
+
         init() {
             this.$watch('selectedCategory', value => {
                 if (value) {
@@ -19,25 +19,25 @@
                     this.$refs.hiddenInput.value = '';
                 }
             });
-            
+
             // Set initial value
             if (this.selectedCategory) {
                 this.$refs.hiddenInput.value = this.selectedCategory.id;
             }
         },
-        
+
         selectCategory(category) {
             this.selectedCategory = category;
             this.isOpen = false;
             this.search = '';
         },
-        
+
         removeCategory() {
             this.selectedCategory = null;
         },
-        
+
         getFilteredCategories() {
-            return this.categories.filter(category => 
+            return this.categories.filter(category =>
                 category.name.toLowerCase().includes(this.search.toLowerCase())
             );
         }
@@ -45,23 +45,23 @@
     class="relative"
 >
     <!-- Hidden input -->
-    <input 
-        type="hidden" 
-        name="category_id" 
+    <input
+        type="hidden"
+        name="category_id"
         x-ref="hiddenInput"
         :value="selectedCategory ? selectedCategory.id : ''"
         required
     >
-    
+
     <!-- Selected category display -->
-    <div 
+    <div
         @click="isOpen = true"
         class="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left border focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm"
     >
         <template x-if="selectedCategory">
             <div class="flex items-center gap-1">
                 <span x-text="selectedCategory.name" class="block truncate"></span>
-                <button 
+                <button
                     @click.stop="removeCategory()"
                     class="text-gray-500 hover:text-gray-700"
                 >
@@ -75,8 +75,8 @@
     </div>
 
     <!-- Dropdown -->
-    <div 
-        x-show="isOpen" 
+    <div
+        x-show="isOpen"
         @click.away="isOpen = false"
         class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm"
     >
@@ -112,3 +112,23 @@
 }
 </style>
 @endpush
+            </template>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-3 py-2 border-t bg-gray-50 flex justify-end space-x-2">
+            <button
+                @click="isOpen = false"
+                type="button"
+                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                Cancel
+            </button>
+            <button
+                @click="isOpen = false"
+                type="button"
+                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700">
+                Confirm
+            </button>
+        </div>
+    </div>
+</div>

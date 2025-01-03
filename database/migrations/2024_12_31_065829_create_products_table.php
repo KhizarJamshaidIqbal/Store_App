@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignId('category_id')->constrained('categories');
             $table->text('description')->nullable();
             $table->text('highlights')->nullable();
-            $table->string('sku')->unique();
+            $table->string('sku')->nullable()->unique();
             $table->string('shop_sku')->nullable();
             $table->string('brand')->nullable();
             $table->string('model')->nullable();

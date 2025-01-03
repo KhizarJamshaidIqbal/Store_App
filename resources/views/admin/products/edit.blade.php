@@ -116,7 +116,7 @@
                                         }
                                     }
                                 @endphp
-                                <x-admin.category-selector 
+                                <x-admin.category-selector
                                     :categories="$categories"
                                     :selected-categories="$selectedCategories"
                                 />
@@ -124,31 +124,121 @@
                         </div>
 
                         <div class="sm:col-span-3">
-                            <label for="status" class="block text-sm font-medium text-gray-700">Status *</label>
-                            <div class="mt-1">
-                                <select id="status" name="status" required
-                                    class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
-                                    <option value="active" {{ old('status', $product->status) == 'active' ? 'selected' : '' }}>Active</option>
-                                    <option value="inactive" {{ old('status', $product->status) == 'inactive' ? 'selected' : '' }}>Inactive</option>
-                                    <option value="draft" {{ old('status', $product->status) == 'draft' ? 'selected' : '' }}>Draft</option>
-                                </select>
+                            <label for="status" class="block text-sm font-medium text-gray-700">Status <span class="text-red-500">*</span></label>
+                            <div class="mt-2" x-data="{ open: false, selected: '{{ old('status', $product->status) }}' }">
+                                <div class="relative">
+                                    <button type="button" 
+                                        @click="open = !open" 
+                                        class="bg-white relative w-full border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                        aria-haspopup="listbox" 
+                                        :aria-expanded="open">
+                                        <span x-text="selected === 'active' ? 'Active' : (selected === 'draft' ? 'Draft' : (selected === 'archived' ? 'Archived' : 'Select status'))"
+                                            class="block truncate capitalize"></span>
+                                        <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3zm-3.707 9.293a1 1 0 011.414 0L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                            </svg>
+                                        </span>
+                                    </button>
+
+                                    <div x-show="open" 
+                                        @click.away="open = false"
+                                        class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
+                                        x-transition:enter="transition ease-out duration-100"
+                                        x-transition:enter-start="transform opacity-0 scale-95"
+                                        x-transition:enter-end="transform opacity-100 scale-100"
+                                        x-transition:leave="transition ease-in duration-75"
+                                        x-transition:leave-start="transform opacity-100 scale-100"
+                                        x-transition:leave-end="transform opacity-0 scale-95">
+                                        <div @click="selected = 'active'; open = false" 
+                                            :class="{ 'bg-blue-50 text-blue-900': selected === 'active' }"
+                                            class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-blue-50">
+                                            <span class="block truncate">Active</span>
+                                            <span x-show="selected === 'active'" class="absolute inset-y-0 right-0 flex items-center pr-4 text-blue-600">
+                                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                </svg>
+                                            </span>
+                                        </div>
+                                        <div @click="selected = 'draft'; open = false"
+                                            :class="{ 'bg-blue-50 text-blue-900': selected === 'draft' }"
+                                            class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-blue-50">
+                                            <span class="block truncate">Draft</span>
+                                            <span x-show="selected === 'draft'" class="absolute inset-y-0 right-0 flex items-center pr-4 text-blue-600">
+                                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                </svg>
+                                            </span>
+                                        </div>
+                                        <div @click="selected = 'archived'; open = false"
+                                            :class="{ 'bg-blue-50 text-blue-900': selected === 'archived' }"
+                                            class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-blue-50">
+                                            <span class="block truncate">Archived</span>
+                                            <span x-show="selected === 'archived'" class="absolute inset-y-0 right-0 flex items-center pr-4 text-blue-600">
+                                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                </svg>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="status" x-model="selected">
+                                </div>
+                            </div>
+
+                            <!-- Dangerous Goods -->
+                            <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4"
+                                x-data="{ enabled: {{ old('dangerous_goods', $product->dangerous_goods) ? 'true' : 'false' }} }">
+                                <div class="flex items-center justify-between">
+                                    <label for="dangerous_goods" class="flex-grow block text-sm font-medium text-gray-700">
+                                        Dangerous Goods
+                                        <p class="mt-1 text-sm text-gray-500">Mark if this product contains dangerous materials</p>
+                                    </label>
+                                    <button type="button"
+                                        @click="enabled = !enabled"
+                                        :class="enabled ? 'bg-blue-600' : 'bg-gray-200'"
+                                        class="relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                        role="switch"
+                                        :aria-checked="enabled">
+                                        <span
+                                            :class="enabled ? 'translate-x-5' : 'translate-x-0'"
+                                            class="pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200">
+                                            <span
+                                                :class="enabled ? 'opacity-0 ease-out duration-100' : 'opacity-100 ease-in duration-200'"
+                                                class="absolute inset-0 h-full w-full flex items-center justify-center transition-opacity"
+                                                aria-hidden="true">
+                                                <svg class="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 12 12">
+                                                    <path d="M4 8l2-2m0 0l2-2M6 6L4 4m2 2l2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                                </svg>
+                                            </span>
+                                            <span
+                                                :class="enabled ? 'opacity-100 ease-in duration-200' : 'opacity-0 ease-out duration-100'"
+                                                class="absolute inset-0 h-full w-full flex items-center justify-center transition-opacity"
+                                                aria-hidden="true">
+                                                <svg class="h-3 w-3 text-blue-600" fill="currentColor" viewBox="0 0 12 12">
+                                                    <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z" />
+                                                </svg>
+                                            </span>
+                                        </span>
+                                    </button>
+                                </div>
+                                <input type="hidden" name="dangerous_goods" :value="enabled ? '1' : '0'">
                             </div>
                         </div>
 
                         <div class="sm:col-span-6">
-                            <label for="description" class="block text-sm font-medium text-gray-700">Description <span class="text-red-500">*</span></label>
+                            <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                            <p class="mt-1 text-sm text-gray-500">Brief description of the product.</p>
                             <div class="mt-1">
                                 <textarea id="description" name="description" class="editor">{{ old('description', $product->description) }}</textarea>
                             </div>
-                            <p class="mt-2 text-sm text-gray-500">Brief description of the product.</p>
                         </div>
 
                         <div class="sm:col-span-6">
-                            <label for="highlights" class="block text-sm font-medium text-gray-700">Highlights <span class="text-red-500">*</span></label>
+                            <label for="highlights" class="block text-sm font-medium text-gray-700">Highlights</label>
+                            <p class="mt-1 text-sm text-gray-500">Key features and highlights of the product.</p>
                             <div class="mt-1">
                                 <textarea id="highlights" name="highlights" class="editor">{{ old('highlights', $product->highlights) }}</textarea>
                             </div>
-                            <p class="mt-2 text-sm text-gray-500">Key features and highlights of the product.</p>
                         </div>
                     </div>
                 </div>
@@ -166,10 +256,17 @@
                     </div>
 
                     <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
+                        {{-- <div class="sm:col-span-3">
                             <label for="sku" class="block text-sm font-medium text-gray-700">SKU *</label>
                             <div class="mt-1">
                                 <input type="text" name="sku" id="sku" value="{{ old('sku', $product->sku) }}" required
+                                    class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                            </div>
+                        </div> --}}
+                        <div class="sm:col-span-3">
+                            <label for="sku" class="block text-sm font-medium text-gray-700">SKU</label>
+                            <div class="mt-1">
+                                <input type="text" name="sku" id="sku" value="{{ old('sku', $product->sku) }}"
                                     class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
                             </div>
                         </div>
@@ -282,14 +379,80 @@
                         <div class="sm:col-span-6">
                             <label for="express_delivery_countries" class="block text-sm font-medium text-gray-700">Express Delivery Countries</label>
                             <div class="mt-1">
-                                <select multiple id="express_delivery_countries" name="express_delivery_countries[]"
-                                    class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
-                                    @foreach(['United States', 'United Kingdom', 'Canada', 'Australia'] as $country)
-                                        <option value="{{ $country }}" {{ in_array($country, old('express_delivery_countries', json_decode($product->express_delivery_countries, true) ?? [])) ? 'selected' : '' }}>{{ $country }}</option>
-                                    @endforeach
-                                </select>
+                                <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4"
+                                    x-data="{
+                                        search: '',
+                                        selected: @json(old('express_delivery_countries', $product->express_delivery_countries ?? [])),
+                                        options: [
+                                            'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 
+                                            'France', 'Italy', 'Spain', 'Netherlands', 'Belgium', 'Switzerland', 
+                                            'Sweden', 'Norway', 'Denmark', 'Finland', 'Japan', 'South Korea', 
+                                            'Singapore', 'Hong Kong', 'New Zealand'
+                                        ],
+                                        get filteredOptions() {
+                                            return this.options.filter(
+                                                i => i.toLowerCase().includes(this.search.toLowerCase()) && !this.selected.includes(i)
+                                            )
+                                        },
+                                        addCountry(country) {
+                                            this.selected.push(country);
+                                            this.search = '';
+                                        },
+                                        removeCountry(index) {
+                                            this.selected.splice(index, 1);
+                                        }
+                                    }">
+                                    <label for="express_delivery_countries" class="block text-sm font-medium text-gray-700 mb-2">
+                                        Express Delivery Countries
+                                    </label>
+                                    
+                                    <!-- Selected Countries Tags -->
+                                    <div class="mb-2 flex flex-wrap gap-2">
+                                        <template x-for="(country, index) in selected" :key="index">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                                                <span x-text="country"></span>
+                                                <button type="button" @click="removeCountry(index)" class="ml-1 inline-flex items-center justify-center flex-shrink-0 h-4 w-4 rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-500 focus:outline-none focus:bg-blue-500 focus:text-white">
+                                                    <span class="sr-only">Remove country</span>
+                                                    <svg class="h-3 w-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                    </svg>
+                                                </button>
+                                            </span>
+                                        </template>
+                                    </div>
+
+                                    <!-- Search Input -->
+                                    <div class="relative">
+                                        <input type="text" 
+                                            x-model="search"
+                                            @keydown.enter.prevent="if(filteredOptions.length > 0) addCountry(filteredOptions[0])"
+                                            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                            placeholder="Search countries...">
+                                        
+                                        <!-- Dropdown -->
+                                        <div x-show="search.length > 0" 
+                                            class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
+                                            x-cloak>
+                                            <template x-for="country in filteredOptions" :key="country">
+                                                <div @click="addCountry(country)"
+                                                    class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-blue-50"
+                                                    :class="{'text-blue-900 bg-blue-50': filteredOptions[0] === country}">
+                                                    <span x-text="country" class="block truncate"></span>
+                                                </div>
+                                            </template>
+                                            <div x-show="filteredOptions.length === 0" 
+                                                class="cursor-default select-none relative py-2 pl-3 pr-9 text-gray-500">
+                                                No countries found
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Hidden input for form submission -->
+                                    <template x-for="country in selected" :key="country">
+                                        <input type="hidden" name="express_delivery_countries[]" :value="country">
+                                    </template>
+                                </div>
                             </div>
-                            <p class="mt-2 text-sm text-gray-500">Hold Ctrl/Cmd to select multiple countries</p>
                         </div>
 
                         <div class="sm:col-span-6">
@@ -322,13 +485,13 @@
                     <div class="grid grid-cols-1 gap-y-6 gap-x-6 sm:grid-cols-3">
                         <!-- Regular Price -->
                         <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
-                            <label for="price" class="block text-sm font-medium text-gray-700">Price *</label>
+                            <label for="price" class="block text-sm font-medium text-gray-700">Price</label>
                             <div class="mt-2 relative rounded-md shadow-sm">
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <span class="text-gray-500 sm:text-sm">$</span>
                                 </div>
                                 <input type="number" step="0.01" name="price" id="price"
-                                    value="{{ old('price', $product->price) }}" required
+                                    value="{{ old('price', $product->price) }}"
                                     class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md"
                                     placeholder="0.00">
                                 <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
@@ -356,10 +519,10 @@
 
                         <!-- Stock -->
                         <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
-                            <label for="stock" class="block text-sm font-medium text-gray-700">Stock *</label>
+                            <label for="stock" class="block text-sm font-medium text-gray-700">Stock</label>
                             <div class="mt-2 relative rounded-md shadow-sm">
                                 <input type="number" name="stock" id="stock"
-                                    value="{{ old('stock', $product->stock) }}" required
+                                    value="{{ old('stock', $product->stock) }}"
                                     min="0" step="1"
                                     class="focus:ring-blue-500 focus:border-blue-500 block w-full pr-10 sm:text-sm border-gray-300 rounded-md"
                                     placeholder="0">
@@ -688,7 +851,7 @@
                     // Save product with variants
                     document.getElementById('product-form').addEventListener('submit', async function(e) {
                         e.preventDefault();
-                        
+
                         const form = this;
                         const submitButton = form.querySelector('[type="submit"]');
                         const originalText = submitButton.innerHTML;
@@ -700,11 +863,11 @@
                             const productId = {{ $product->id }};
                             const formData = new FormData(form);
                             const jsonData = {};
-                            
+
                             // Convert FormData to object
                             for (let [key, value] of formData.entries()) {
                                 if (key === '_token' || key === '_method') continue;
-                                
+
                                 if (key.includes('variants[')) {
                                     const matches = key.match(/variants\[(\d+)\]\[([^\]]+)\]/);
                                     if (matches) {
@@ -725,6 +888,10 @@
 
                             // Make the request to the correct URL
                             const url = `{{ url('/admin/products') }}/${productId}`;
+
+                            console.log('Submitting data:', jsonData); // Debug log
+
+                            // Make the request
                             const response = await fetch(url, {
                                 method: 'POST',
                                 headers: {
@@ -750,7 +917,7 @@
 
                             if (result.success) {
                                 showNotification(result.message || 'Product updated successfully', 'success');
-                                
+
                                 // Update category display if available
                                 if (result.data?.category) {
                                     const categorySelector = document.querySelector('[x-data]');
@@ -970,7 +1137,7 @@
     // Handle form submission
     document.getElementById('product-form').addEventListener('submit', async function(e) {
         e.preventDefault();
-        
+
         const form = this;
         const submitButton = form.querySelector('[type="submit"]');
         const originalText = submitButton.innerHTML;
@@ -980,15 +1147,15 @@
         try {
             const formData = new FormData(form);
             const jsonData = {};
-            
+
             // Handle multiple select fields
             const expressDeliverySelect = document.getElementById('express_delivery_countries');
             const selectedCountries = Array.from(expressDeliverySelect.selectedOptions).map(option => option.value);
-            
+
             // Convert FormData to object
             for (let [key, value] of formData.entries()) {
                 if (key === '_token' || key === '_method') continue;
-                
+
                 if (key.includes('variants[')) {
                     const matches = key.match(/variants\[(\d+)\]\[([^\]]+)\]/);
                     if (matches) {
@@ -1029,6 +1196,7 @@
                 },
                 body: JSON.stringify({
                     ...jsonData,
+                    _token: formData.get('_token'),
                     _method: 'PUT'
                 })
             });
@@ -1044,7 +1212,7 @@
 
             if (result.success) {
                 showNotification(result.message || 'Product updated successfully', 'success');
-                
+
                 // Update category display if available
                 if (result.data?.category) {
                     const categorySelector = document.querySelector('[x-data]');
@@ -1055,6 +1223,13 @@
                                 id: result.data.category.id,
                                 name: result.data.category.name
                             };
+                            // Update the hidden input if it exists
+                            const hiddenInput = categorySelector.querySelector('[x-ref="hiddenInput"]');
+                            if (hiddenInput) {
+                                hiddenInput.value = result.data.category.id;
+                            } else {
+                                console.warn('Hidden input not found');
+                            }
                         }
                     }
                 }

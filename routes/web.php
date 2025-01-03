@@ -43,7 +43,10 @@ Route::prefix('admin')
         Route::post('/products/images/{image}/set-primary', [ProductController::class, 'setImageAsPrimary'])->name('products.images.set-primary');
         Route::post('/products/images/reorder', [ProductController::class, 'updateImageOrder'])->name('products.images.reorder');
         Route::delete('/products/images/{image}', [ProductController::class, 'deleteImage'])->name('products.images.delete');
-    });
+
+
+    }
+);
 
 // Redirect root to admin dashboard
 Route::get('/', function () {

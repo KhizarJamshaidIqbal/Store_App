@@ -65,13 +65,6 @@ class ProductController extends Controller
         try {
             Log::info('Product creation started', ['request_data' => $request->all()]);
 
-            // Convert express_delivery_countries array to JSON
-            if ($request->has('express_delivery_countries')) {
-                $request->merge([
-                    'express_delivery_countries' => json_encode($request->express_delivery_countries)
-                ]);
-            }
-
             // Set default values for checkboxes if not present
             $request->merge([
                 'dangerous_goods' => $request->has('dangerous_goods') ? 1 : 0,
@@ -84,7 +77,7 @@ class ProductController extends Controller
                 'category_id' => 'required|exists:categories,id',
                 'description' => 'nullable|string',
                 'highlights' => 'nullable|string',
-                'sku' => 'required|string|unique:products',
+                'sku' => 'nullable|string|unique:products',
                 'shop_sku' => 'nullable|string',
                 'brand' => 'nullable|string',
                 'model' => 'nullable|string',
@@ -100,9 +93,9 @@ class ProductController extends Controller
                 'express_delivery_countries.*' => 'string',
                 'brand_classification' => 'nullable|string',
                 'shelf_life' => 'nullable|string',
-                'price' => 'required|numeric|min:0',
+                'price' => 'nullable|numeric|min:0',
                 'special_price' => 'nullable|numeric|min:0',
-                'stock' => 'required|integer|min:0',
+                'stock' => 'nullable|integer|min:0',
                 'package_weight' => 'nullable|numeric',
                 'package_length' => 'nullable|numeric',
                 'package_width' => 'nullable|numeric',
@@ -121,15 +114,17 @@ class ProductController extends Controller
                 'variants.*.status' => 'required_with:variants|string|in:active,inactive'
             ]);
 
+            // Convert express_delivery_countries array to JSON after validation
+            if (isset($validated['express_delivery_countries'])) {
+                $validated['express_delivery_countries'] = json_encode($validated['express_delivery_countries']);
+            }
+
             Log::info('Validation passed', ['validated_data' => $validated]);
 
             // Generate slug if not provided
             if (!$request->filled('slug')) {
                 $validated['slug'] = Str::slug($validated['name']);
             }
-
-            // Convert express_delivery_countries array to JSON
-            $validated['express_delivery_countries'] = json_encode($validated['express_delivery_countries'] ?? []);
 
             // Create the product
             $product = Product::create($validated);
@@ -196,7 +191,7 @@ class ProductController extends Controller
                 'category_id' => 'required|exists:categories,id',
                 'description' => 'nullable|string',
                 'highlights' => 'nullable|string',
-                'sku' => 'required|string|unique:products,sku,' . $product->id,
+                'sku' => 'nullable|string|unique:products,sku,' . $product->id,
                 'shop_sku' => 'nullable|string',
                 'brand' => 'nullable|string',
                 'model' => 'nullable|string',
@@ -212,9 +207,9 @@ class ProductController extends Controller
                 'express_delivery_countries.*' => 'string',
                 'brand_classification' => 'nullable|string',
                 'shelf_life' => 'nullable|string',
-                'price' => 'required|numeric|min:0',
+                'price' => 'nullable|numeric|min:0',
                 'special_price' => 'nullable|numeric|min:0',
-                'stock' => 'required|integer|min:0',
+                'stock' => 'nullable|integer|min:0',
                 'package_weight' => 'nullable|numeric',
                 'package_length' => 'nullable|numeric',
                 'package_width' => 'nullable|numeric',
@@ -335,10 +330,12 @@ class ProductController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'sku' => 'required|string|unique:products,sku',
+            'sku' => 'nullable|string|unique:products,sku',
             'category_id' => 'required|exists:categories,id',
-            'price' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
+            'description' => 'nullable|string',
+            'highlights' => 'nullable|string',
+            'price' => 'nullable|numeric|min:0',
+            'stock' => 'nullable|integer|min:0',
         ]);
 
         $validated['dangerous_goods'] = $request->has('dangerous_goods') ? 1 : 0;
