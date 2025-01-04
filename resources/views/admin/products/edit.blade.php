@@ -132,7 +132,7 @@
                                         class="bg-white relative w-full border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                         aria-haspopup="listbox"
                                         :aria-expanded="open">
-                                        <span x-text="selected === 'active' ? 'Active' : (selected === 'draft' ? 'Draft' : (selected === 'archived' ? 'Archived' : 'Select status'))"
+                                        <span x-text="selected === 'active' ? 'Active' : (selected === 'inactive' ? 'InActive' : (selected === 'archived' ? 'Archived' : 'Select status'))"
                                             class="block truncate capitalize"></span>
                                         <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                                             <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -160,11 +160,11 @@
                                                 </svg>
                                             </span>
                                         </div>
-                                        <div @click="selected = 'draft'; open = false"
-                                            :class="{ 'bg-blue-50 text-blue-900': selected === 'draft' }"
+                                        <div @click="selected = 'inactive'; open = false"
+                                            :class="{ 'bg-blue-50 text-blue-900': selected === 'inactive' }"
                                             class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-blue-50">
-                                            <span class="block truncate">Draft</span>
-                                            <span x-show="selected === 'draft'" class="absolute inset-y-0 right-0 flex items-center pr-4 text-blue-600">
+                                            <span class="block truncate">InActive</span>
+                                            <span x-show="selected === 'inactive'" class="absolute inset-y-0 right-0 flex items-center pr-4 text-blue-600">
                                                 <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                                                 </svg>
@@ -189,41 +189,24 @@
                             <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4"
                                 x-data="{ enabled: {{ old('dangerous_goods', $product->dangerous_goods) ? 'true' : 'false' }} }">
                                 <div class="flex items-center justify-between">
-                                    <label for="dangerous_goods" class="flex-grow block text-sm font-medium text-gray-700">
-                                        Dangerous Goods
-                                        <p class="mt-1 text-sm text-gray-500">Mark if this product contains dangerous materials</p>
-                                    </label>
+                                    <div>
+                                        <label class="text-sm font-medium text-gray-700">Dangerous Goods</label>
+                                        <p class="text-sm text-gray-500">Mark if this product contains dangerous materials</p>
+                                    </div>
                                     <button type="button"
                                         @click="enabled = !enabled"
                                         :class="enabled ? 'bg-blue-600' : 'bg-gray-200'"
                                         class="relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                                         role="switch"
-                                        :aria-checked="enabled">
+                                        aria-checked="false">
                                         <span
                                             :class="enabled ? 'translate-x-5' : 'translate-x-0'"
-                                            class="pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200">
-                                            <span
-                                                :class="enabled ? 'opacity-0 ease-out duration-100' : 'opacity-100 ease-in duration-200'"
-                                                class="absolute inset-0 h-full w-full flex items-center justify-center transition-opacity"
-                                                aria-hidden="true">
-                                                <svg class="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 12 12">
-                                                    <path d="M4 8l2-2m0 0l2-2M6 6L4 4m2 2l2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg>
-                                            </span>
-                                            <span
-                                                :class="enabled ? 'opacity-100 ease-in duration-200' : 'opacity-0 ease-out duration-100'"
-                                                class="absolute inset-0 h-full w-full flex items-center justify-center transition-opacity"
-                                                aria-hidden="true">
-                                                <svg class="h-3 w-3 text-blue-600" fill="currentColor" viewBox="0 0 12 12">
-                                                    <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z" />
-                                                </svg>
-                                            </span>
+                                            class="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200">
                                         </span>
                                     </button>
                                 </div>
-                                <input type="hidden" name="dangerous_goods" :value="enabled ? '1' : '0'">
+                                <input type="hidden" name="dangerous_goods" :value="enabled ? 1 : 0">
                             </div>
-                        </div>
 
                         <div class="sm:col-span-6">
                             <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
@@ -376,13 +359,15 @@
                             </div>
                         </div>
 
+
+
                         <div class="sm:col-span-6">
                             <label for="express_delivery_countries" class="block text-sm font-medium text-gray-700">Express Delivery Countries</label>
                             <div class="mt-1">
                                 <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4"
                                     x-data="{
                                         search: '',
-                                        selected: @json(old('express_delivery_countries', $product->express_delivery_countries ?? [])),
+                                        selected: @json(old('express_delivery_countries', [])),
                                         options: [
                                             'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany',
                                             'France', 'Italy', 'Spain', 'Netherlands', 'Belgium', 'Switzerland',
@@ -402,9 +387,6 @@
                                             this.selected.splice(index, 1);
                                         }
                                     }">
-                                    <label for="express_delivery_countries" class="block text-sm font-medium text-gray-700 mb-2">
-                                        Express Delivery Countries
-                                    </label>
 
                                     <!-- Selected Countries Tags -->
                                     <div class="mb-2 flex flex-wrap gap-2">
@@ -455,7 +437,7 @@
                             </div>
                         </div>
 
-                        <div class="sm:col-span-6">
+                        {{-- <div class="sm:col-span-6">
                             <div class="flex items-start">
                                 <div class="flex items-center h-5">
                                     <input id="dangerous_goods" name="dangerous_goods" type="checkbox" value="1"
@@ -467,7 +449,7 @@
                                     <p class="text-gray-500">Check this if the product contains hazardous materials</p>
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
                 <!-- Pricing & Stock -->
@@ -886,7 +868,7 @@
                                 jsonData.variants = jsonData.variants.filter(Boolean);
                             }
 
-                            // Make the request to the correct URL
+                            // Construct the correct URL
                             const url = `{{ url('/admin/products') }}/${productId}`;
 
                             console.log('Submitting data:', jsonData); // Debug log

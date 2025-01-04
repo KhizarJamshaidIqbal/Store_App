@@ -460,7 +460,7 @@
                                             class="w-full bg-white border border-gray-300 rounded-md shadow-sm px-4 py-2 text-left cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                             aria-haspopup="listbox"
                                             :aria-expanded="open">
-                                            <span x-text="selected === 'active' ? 'Active' : (selected === 'draft' ? 'Draft' : (selected === 'archived' ? 'Archived' : 'Select status'))"
+                                            <span x-text="selected === 'active' ? 'Active' : (selected === 'inactive' ? 'InActive' : (selected === 'archived' ? 'Archived' : 'Select status'))"
                                                 class="block truncate capitalize"></span>
                                             <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                                                 <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -489,11 +489,11 @@
                                                     </svg>
                                                 </span>
                                             </div>
-                                            <div @click="selected = 'draft'; open = false"
-                                                :class="{ 'bg-blue-100': selected === 'draft' }"
+                                            <div @click="selected = 'inactive'; open = false"
+                                                :class="{ 'bg-blue-100': selected === 'inactive' }"
                                                 class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-blue-50">
-                                                <span class="block truncate">Draft</span>
-                                                <span x-show="selected === 'draft'"
+                                                <span class="block truncate">InActive</span>
+                                                <span x-show="selected === 'inactive'"
                                                     class="absolute inset-y-0 right-0 flex items-center pr-4 text-blue-600">
                                                     <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
