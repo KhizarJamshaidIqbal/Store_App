@@ -16,7 +16,7 @@
             <div class="mt-4 flex md:mt-0 md:ml-4">
                 <a href="{{ route('admin.products.index') }}"
                    class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    <svg class="-ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg class="h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" />
                     </svg>
                     Back to Products
@@ -229,7 +229,7 @@
                         <div class="sm:col-span-3">
                             <label for="price" class="block text-sm font-medium text-gray-700">Price</label>
                             <div class="mt-1">
-                                <input type="number" step="0.01" name="price" id="price" value="{{ old('price') }}"
+                                <input type="text" name="price" id="price" value="{{ old('price') }}"
                                     class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
                             </div>
                         </div>
@@ -237,7 +237,7 @@
                         <div class="sm:col-span-3">
                             <label for="special_price" class="block text-sm font-medium text-gray-700">Special Price</label>
                             <div class="mt-1">
-                                <input type="number" step="0.01" name="special_price" id="special_price" value="{{ old('special_price') }}"
+                                <input type="text" name="special_price" id="special_price" value="{{ old('special_price') }}"
                                     class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
                             </div>
                         </div>
@@ -245,7 +245,7 @@
                         <div class="sm:col-span-3">
                             <label for="stock" class="block text-sm font-medium text-gray-700">Stock</label>
                             <div class="mt-1">
-                                <input type="number" name="stock" id="stock" value="{{ old('stock') }}"
+                                <input type="text" name="stock" id="stock" value="{{ old('stock') }}"
                                     class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
                             </div>
                         </div>
@@ -268,7 +268,7 @@
                         <div class="sm:col-span-3">
                             <label for="weight" class="block text-sm font-medium text-gray-700">Weight (kg)</label>
                             <div class="mt-1">
-                                <input type="number" step="0.01" name="weight" id="weight" value="{{ old('weight') }}"
+                                <input type="text" name="weight" id="weight" value="{{ old('weight') }}"
                                     class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
                             </div>
                         </div>
@@ -276,7 +276,7 @@
                         <div class="sm:col-span-3">
                             <label for="package_weight" class="block text-sm font-medium text-gray-700">Package Weight (kg)</label>
                             <div class="mt-1">
-                                <input type="number" step="0.01" name="package_weight" id="package_weight" value="{{ old('package_weight') }}"
+                                <input type="text" name="package_weight" id="package_weight" value="{{ old('package_weight') }}"
                                     class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
                             </div>
                         </div>
@@ -284,7 +284,7 @@
                         <div class="sm:col-span-2">
                             <label for="package_length" class="block text-sm font-medium text-gray-700">Length (cm)</label>
                             <div class="mt-1">
-                                <input type="number" step="0.01" name="package_length" id="package_length" value="{{ old('package_length') }}"
+                                <input type="text" name="package_length" id="package_length" value="{{ old('package_length') }}"
                                     class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
                             </div>
                         </div>
@@ -292,7 +292,7 @@
                         <div class="sm:col-span-2">
                             <label for="package_width" class="block text-sm font-medium text-gray-700">Width (cm)</label>
                             <div class="mt-1">
-                                <input type="number" step="0.01" name="package_width" id="package_width" value="{{ old('package_width') }}"
+                                <input type="text" name="package_width" id="package_width" value="{{ old('package_width') }}"
                                     class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
                             </div>
                         </div>
@@ -300,7 +300,7 @@
                         <div class="sm:col-span-2">
                             <label for="package_height" class="block text-sm font-medium text-gray-700">Height (cm)</label>
                             <div class="mt-1">
-                                <input type="number" step="0.01" name="package_height" id="package_height" value="{{ old('package_height') }}"
+                                <input type="text" name="package_height" id="package_height" value="{{ old('package_height') }}"
                                     class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
                             </div>
                         </div>
@@ -416,10 +416,7 @@
                             <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4"
                                 x-data="{ enabled: {{ old('dangerous_goods', 0) ? 'true' : 'false' }} }">
                                 <div class="flex items-center justify-between">
-                                    <label for="dangerous_goods" class="flex-grow block text-sm font-medium text-gray-700">
-                                        Dangerous Goods
-                                        <p class="mt-1 text-sm text-gray-500">Mark if this product contains dangerous materials</p>
-                                    </label>
+                                    <label for="dangerous_goods" class="flex-grow block text-sm font-medium text-gray-700">Dangerous Goods</label>
                                     <button type="button"
                                         @click="enabled = !enabled"
                                         :class="enabled ? 'bg-blue-600' : 'bg-gray-200'"
@@ -454,65 +451,70 @@
 
                         <div class="sm:col-span-6">
                             <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4"
-                                x-data="{ open: false, selected: '{{ old('status', 'draft') }}' }">
-                                <div class="flex items-center justify-between">
-                                    <label for="status" class="flex-grow block text-sm font-medium text-gray-700">Status <span class="text-red-500">*</span></label>
-                                    <button type="button"
-                                        @click="open = !open"
-                                        class="bg-white relative w-full border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                        aria-haspopup="listbox"
-                                        :aria-expanded="open">
-                                        <span x-text="selected === 'active' ? 'Active' : (selected === 'draft' ? 'Draft' : (selected === 'archived' ? 'Archived' : 'Select status'))"
-                                            class="block truncate capitalize"></span>
-                                        <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                            <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                                <path fill-rule="evenodd" d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3zm-3.707 9.293a1 1 0 011.414 0L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                            </svg>
-                                        </span>
-                                    </button>
+                                x-data="{ open: false, selected: '{{ old('status', 'active') }}' }">
+                                <div class="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
+                                    <label for="status" class="block text-sm font-medium text-gray-700">Status <span class="text-red-500">*</span></label>
+                                    <div class="relative w-full sm:w-48 md:w-64" x-data="{ open: false, selected: '{{ old('status', 'active') }}' }">
+                                        <button type="button"
+                                            @click="open = !open"
+                                            class="w-full bg-white border border-gray-300 rounded-md shadow-sm px-4 py-2 text-left cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                            aria-haspopup="listbox"
+                                            :aria-expanded="open">
+                                            <span x-text="selected === 'active' ? 'Active' : (selected === 'draft' ? 'Draft' : (selected === 'archived' ? 'Archived' : 'Select status'))"
+                                                class="block truncate capitalize"></span>
+                                            <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path fill-rule="evenodd" d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3zm-3.707 9.293a1 1 0 011.414 0L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                                </svg>
+                                            </span>
+                                        </button>
 
-                                    <div x-show="open"
-                                        @click.away="open = false"
-                                        class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
-                                        x-transition:enter="transition ease-out duration-100"
-                                        x-transition:enter-start="transform opacity-0 scale-95"
-                                        x-transition:enter-end="transform opacity-100 scale-100"
-                                        x-transition:leave="transition ease-in duration-75"
-                                        x-transition:leave-start="transform opacity-100 scale-100"
-                                        x-transition:leave-end="transform opacity-0 scale-95">
-                                        <div @click="selected = 'active'; open = false"
-                                            :class="{ 'bg-blue-50 text-blue-900': selected === 'active' }"
-                                            class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-blue-50">
-                                            <span class="block truncate">Active</span>
-                                            <span x-show="selected === 'active'" class="absolute inset-y-0 right-0 flex items-center pr-4 text-blue-600">
-                                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                                </svg>
-                                            </span>
+                                        <div x-show="open"
+                                            @click.away="open = false"
+                                            class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
+                                            x-transition:enter="transition ease-out duration-100"
+                                            x-transition:enter-start="transform opacity-0 scale-95"
+                                            x-transition:enter-end="transform opacity-100 scale-100"
+                                            x-transition:leave="transition ease-in duration-75"
+                                            x-transition:leave-start="transform opacity-100 scale-100"
+                                            x-transition:leave-end="transform opacity-0 scale-95">
+                                            <div @click="selected = 'active'; open = false"
+                                                :class="{ 'bg-blue-100': selected === 'active' }"
+                                                class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-blue-50">
+                                                <span class="block truncate font-medium">Active</span>
+                                                <span x-show="selected === 'active'"
+                                                    class="absolute inset-y-0 right-0 flex items-center pr-4 text-blue-600">
+                                                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                    </svg>
+                                                </span>
+                                            </div>
+                                            <div @click="selected = 'draft'; open = false"
+                                                :class="{ 'bg-blue-100': selected === 'draft' }"
+                                                class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-blue-50">
+                                                <span class="block truncate">Draft</span>
+                                                <span x-show="selected === 'draft'"
+                                                    class="absolute inset-y-0 right-0 flex items-center pr-4 text-blue-600">
+                                                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                    </svg>
+                                                </span>
+                                            </div>
+                                            <div @click="selected = 'archived'; open = false"
+                                                :class="{ 'bg-blue-100': selected === 'archived' }"
+                                                class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-blue-50">
+                                                <span class="block truncate">Archived</span>
+                                                <span x-show="selected === 'archived'"
+                                                    class="absolute inset-y-0 right-0 flex items-center pr-4 text-blue-600">
+                                                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                                    </svg>
+                                                </span>
+                                            </div>
                                         </div>
-                                        <div @click="selected = 'draft'; open = false"
-                                            :class="{ 'bg-blue-50 text-blue-900': selected === 'draft' }"
-                                            class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-blue-50">
-                                            <span class="block truncate">Draft</span>
-                                            <span x-show="selected === 'draft'" class="absolute inset-y-0 right-0 flex items-center pr-4 text-blue-600">
-                                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                                </svg>
-                                            </span>
-                                        </div>
-                                        <div @click="selected = 'archived'; open = false"
-                                            :class="{ 'bg-blue-50 text-blue-900': selected === 'archived' }"
-                                            class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-blue-50">
-                                            <span class="block truncate">Archived</span>
-                                            <span x-show="selected === 'archived'" class="absolute inset-y-0 right-0 flex items-center pr-4 text-blue-600">
-                                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                                </svg>
-                                            </span>
-                                        </div>
+                                        <input type="hidden" name="status" x-model="selected">
                                     </div>
                                 </div>
-                                <input type="hidden" name="status" x-model="selected">
                             </div>
                         </div>
                     </div>
@@ -611,7 +613,7 @@
                                        @change="handleFiles($event)">
 
                                 <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                 </svg>
 
                                 <div class="mt-4">
@@ -644,7 +646,7 @@
                                             <button @click="removeFile(index)"
                                                     class="p-1 bg-white rounded-full shadow-sm hover:bg-gray-100">
                                                 <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                                 </svg>
                                             </button>
                                         </div>
@@ -669,18 +671,16 @@
                                            class="hidden"
                                            @change="handleFiles($event)">
 
-                                    <label for="add-more-images" class="block cursor-pointer">
-                                        <div class="aspect-w-4 aspect-h-3 flex items-center justify-center">
-                                            <div class="text-center space-y-2">
-                                                <div class="mx-auto h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center">
-                                                    <svg class="h-6 w-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                    <label for="add-more-images" class="block cursor-pointer text-center justify-center">
+                                        <div class="h-48 flex items-center justify-center ">
+                                            <div class="text-center justify-center">
+                                                <div class="mb-3">
+                                                    <svg class="mx-auto h-8 w-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4" />
                                                     </svg>
                                                 </div>
-                                                <div>
-                                                    <span class="block text-sm font-medium text-blue-600">Add More Images</span>
-                                                    <span class="block text-xs text-gray-500">or drag and drop</span>
-                                                </div>
+                                                <span class="block text-sm font-medium text-blue-600">Add More Images</span>
+                                                <span class="block text-xs text-gray-500 mt-1">or drag and drop</span>
                                             </div>
                                         </div>
                                     </label>
@@ -696,29 +696,160 @@
                 </div>
 
                 <!-- Product Variants -->
-                <div class="p-6 space-y-6">
-                    <div>
-                        <h3 class="text-lg leading-6 font-medium text-gray-900 flex items-center">
-                            <svg class="h-5 w-5 text-gray-400 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            Product Variants
-                        </h3>
-                        <p class="mt-1 text-sm text-gray-500">Add the product variants.</p>
+                <div class="p-6 space-y-8 bg-white rounded-lg shadow mb-16" x-data="variantManager()">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900">Price, Stock & Variants</h3>
+                            <p class="mt-1 text-sm text-gray-500">Add variant options for your product</p>
+                        </div>
+                        <button type="button" @click="addVariant()" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Add Variant
+                        </button>
                     </div>
 
-                    <div id="variants-container">
-                        <!-- Variant template will be added here -->
+                    <template x-for="(variant, variantIndex) in variants" :key="variantIndex">
+                        <div class="mb-8 bg-white border border-gray-200 rounded-lg">
+                            <div class="flex justify-end p-2 border-b">
+                                <button type="button"
+                                    @click="removeVariant(variantIndex)"
+                                    class="text-gray-400 hover:text-gray-500 p-1">
+                                    ×
+                                </button>
+                            </div>
+                            <div class="p-4 space-y-4">
+                                <!-- Variant Name and Status -->
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            Variant Name <span class="text-red-500">*</span>
+                                        </label>
+                                        <input type="text"
+                                            x-model="variant.name"
+                                            :name="`variants[${variantIndex}][name]`"
+                                            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                            placeholder="e.g. Size, Color"
+                                            required>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            Status <span class="text-red-500">*</span>
+                                        </label>
+                                        <select
+                                            x-model="variant.status"
+                                            :name="`variants[${variantIndex}][status]`"
+                                            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                            required>
+                                            <option value="active">Active</option>
+                                            <option value="inactive">Inactive</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Variant Value -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                                        Variant Value <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text"
+                                        x-model="variant.value"
+                                        :name="`variants[${variantIndex}][value]`"
+                                        class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                        placeholder="Enter value"
+                                        required>
+                                </div>
+
+                                <!-- Price & Stock -->
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            Price <span class="text-red-500">*</span>
+                                        </label>
+                                        <div class="flex rounded-md shadow-sm">
+                                            <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">Rs.</span>
+                                            <input type="text"
+                                                x-model="variant.price"
+                                                :name="`variants[${variantIndex}][price]`"
+                                                class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300"
+                                                required>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            Special Price
+                                        </label>
+                                        <div class="flex rounded-md shadow-sm">
+                                            <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">Rs.</span>
+                                            <input type="text"
+                                                x-model="variant.special_price"
+                                                :name="`variants[${variantIndex}][special_price]`"
+                                                class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            Stock <span class="text-red-500">*</span>
+                                        </label>
+                                        <input type="number"
+                                            x-model="variant.stock"
+                                            :name="`variants[${variantIndex}][stock]`"
+                                            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                            required>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            SKU
+                                        </label>
+                                        <input type="text"
+                                            x-model="variant.sku"
+                                            :name="`variants[${variantIndex}][sku]`"
+                                            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Empty State -->
+                    <div x-show="variants.length === 0" class="text-center py-16 bg-white rounded-lg border-2 border-dashed border-gray-300">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <h3 class="mt-2 text-sm font-medium text-gray-900">No variants</h3>
+                        <p class="mt-1 text-sm text-gray-500">Get started by creating a new variant.</p>
                     </div>
-                    <button type="button" class="btn btn-secondary" onclick="addVariant()">Add Variant</button>
                 </div>
+
+                <script>
+                    document.addEventListener('alpine:init', () => {
+                        Alpine.data('variantManager', () => ({
+                            variants: [],
+                            addVariant() {
+                                this.variants.push({
+                                    name: '',
+                                    status: 'active',
+                                    value: '',
+                                    price: '',
+                                    special_price: '',
+                                    stock: '',
+                                    sku: ''
+                                });
+                            },
+                            removeVariant(index) {
+                                this.variants.splice(index, 1);
+                            }
+                        }))
+                    });
+                </script>
 
                 <!-- Form Actions -->
                 <div class="fixed bottom-0 left-0 right-0 bg-gray-50 px-6 py-4 flex justify-end space-x-4 border-t border-gray-200">
                     <button type="button" onclick="window.location.href='{{ route('admin.products.index') }}'" class="px-4 py-2 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         Cancel
                     </button>
-                    <button type="button" class="px-4 py-2 bg-gray-200 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <button type="button" onclick="submitAsDraft()" class="px-4 py-2 bg-gray-200 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         Save as Draft
                     </button>
                     <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
@@ -732,29 +863,39 @@
 
 @push('scripts')
 <script>
+    function submitAsDraft() {
+        const form = document.getElementById('product-form');
+        const originalAction = form.getAttribute('action');
+        form.action = "{{ route('admin.products.draft') }}";
+
+        // Add a hidden input to indicate this is a draft submission
+        let draftInput = document.createElement('input');
+        draftInput.type = 'hidden';
+        draftInput.name = 'is_draft';
+        draftInput.value = '1';
+        form.appendChild(draftInput);
+
+        form.submit();
+    }
+
     // Function to generate slug from text
     function generateSlug(text) {
-        return text
-            .toString()
-            .toLowerCase()
-            .trim()
+        return text.toString().toLowerCase()
             .replace(/\s+/g, '-')           // Replace spaces with -
             .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
             .replace(/\-\-+/g, '-')         // Replace multiple - with single -
-            .replace(/^\-+/, '')             // Trim - from start of text
+            .replace(/^-+/, '')             // Trim - from start of text
             .replace(/-+$/, '');            // Trim - from end of text
     }
 
     // Auto-generate slug from product name
-    document.getElementById('name').addEventListener('input', function(e) {
-        const slugInput = document.getElementById('slug');
-        if (slugInput) {
-            slugInput.value = generateSlug(e.target.value);
-        }
+    document.getElementById('name').addEventListener('input', function() {
+        document.getElementById('slug').value = generateSlug(this.value);
     });
-
-    let variantCount = 0;
-
+</script>
+@endpush
+@push('scripts')
+<script>
     // Initialize select2 for express delivery countries
     $(document).ready(function() {
         $('#express_delivery_countries').select2({
@@ -784,19 +925,19 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <label>Price *</label>
-                            <input type="number" step="0.01" name="variants[${variantCount}][price]" class="form-control" required>
+                            <input type="text" name="variants[${variantCount}][price]" class="form-control" required>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
                             <label>Special Price</label>
-                            <input type="number" step="0.01" name="variants[${variantCount}][special_price]" class="form-control">
+                            <input type="text" name="variants[${variantCount}][special_price]" class="form-control">
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
                             <label>Stock *</label>
-                            <input type="number" name="variants[${variantCount}][stock]" class="form-control" required>
+                            <input type="text" name="variants[${variantCount}][stock]" class="form-control" required>
                         </div>
                     </div>
                     <div class="col-md-6">

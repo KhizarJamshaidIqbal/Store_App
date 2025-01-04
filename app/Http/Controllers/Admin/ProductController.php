@@ -3,55 +3,129 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\ProductVariant;
-use App\Models\Category;
+use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with(['images', 'category']); // Eager load relationships
+        $currentTab = $request->get('tab', 'all');
+        $query = Product::query();
+
+        // Apply tab filters
+        switch ($currentTab) {
+            case 'active':
+                $query->where('status', 'active')->where('is_draft', false);
+                break;
+            case 'inactive':
+                $query->where('status', 'inactive')->where('is_draft', false);
+                break;
+            case 'draft':
+                $query->where('is_draft', true);
+                break;
+            case 'trashed':
+                $query->onlyTrashed();
+                break;
+            default:
+                // 'all' tab - show everything except trashed
+                $query->whereNull('deleted_at');
+                break;
+        }
 
         // Apply search filter
         if ($request->filled('search')) {
-            $search = $request->input('search');
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('sku', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+            $searchTerm = $request->get('search');
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('name', 'like', "%{$searchTerm}%")
+                  ->orWhere('sku', 'like', "%{$searchTerm}%")
+                  ->orWhere('description', 'like', "%{$searchTerm}%");
             });
         }
 
         // Apply category filter
         if ($request->filled('category')) {
-            $query->where('category_id', $request->input('category'));
+            $query->where('category_id', $request->get('category'));
         }
 
-        // Apply status filter
-        if ($request->filled('status')) {
-            $query->where('status', $request->input('status'));
+        // Apply sorting
+        $sortBy = $request->get('sort', 'latest');
+        switch ($sortBy) {
+            case 'name_asc':
+                $query->orderBy('name', 'asc');
+                break;
+            case 'name_desc':
+                $query->orderBy('name', 'desc');
+                break;
+            case 'price_low':
+                $query->orderBy('price', 'asc');
+                break;
+            case 'price_high':
+                $query->orderBy('price', 'desc');
+                break;
+            case 'oldest':
+                $query->oldest();
+                break;
+            default: // 'latest'
+                $query->latest();
+                break;
         }
 
-        // Calculate statistics
+        // Get counts for tabs
+        $totalProducts = Product::count();
+        $activeProducts = Product::where('status', 'active')->where('is_draft', false)->count();
+        $inactiveProducts = Product::where('status', 'inactive')->where('is_draft', false)->count();
+        $draftProducts = Product::where('is_draft', true)->count();
+        $trashedProducts = Product::onlyTrashed()->count();
+        $lowStockProducts = Product::where('stock', '<', 10)->where('status', 'active')->count();
+
+        // Calculate statistics for the cards
         $statistics = [
-            'total_products' => Product::count(),
-            'active_products' => Product::where('status', 'active')->count(),
-            'inactive_products' => Product::where('status', 'inactive')->count(),
-            'low_stock_products' => Product::where('stock', '<=', 10)->count(),
-            'total_sales_value' => Product::sum('price'),
+            'total_products' => $totalProducts,
+            'active_products' => $activeProducts,
+            'inactive_products' => $inactiveProducts,
+            'low_stock_products' => $lowStockProducts,
+            'draft_products' => $draftProducts,
+            'trashed_products' => $trashedProducts
         ];
 
-        $categories = Category::all();
-        $products = $query->latest()->paginate(12);
+        // Get categories for filtering
+        $categories = Category::whereNull('parent_id')
+            ->with(['childrenRecursive' => function($query) {
+                $query->orderBy('sort_order');
+            }])
+            ->orderBy('sort_order')
+            ->get();
 
-        return view('admin.products.index', compact('products', 'categories', 'statistics'));
+        // Get products with their relationships
+        $perPage = $request->get('per_page', 12);
+        $products = $query->with(['category', 'images' => function($query) {
+            $query->where('is_primary', true);
+        }])->paginate($perPage);
+
+        // Append query parameters to pagination links
+        $products->appends($request->except('page'));
+
+        return view('admin.products.index', compact(
+            'products',
+            'currentTab',
+            'totalProducts',
+            'activeProducts',
+            'inactiveProducts',
+            'draftProducts',
+            'trashedProducts',
+            'lowStockProducts',
+            'statistics',
+            'categories'
+        ));
     }
 
     public function create()
@@ -172,10 +246,10 @@ class ProductController extends Controller
         $product->load(['images' => function($query) {
             $query->orderByDesc('is_primary')->orderBy('sort_order');
         }]);
-        
+
         // Get all categories
         $categories = Category::all();
-        
+
         return view('admin.products.edit', compact('product', 'categories'));
     }
 
@@ -300,7 +374,7 @@ class ProductController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
@@ -326,22 +400,64 @@ class ProductController extends Controller
             ->with('success', 'Product deleted successfully!');
     }
 
+    public function restore($id)
+    {
+        try {
+            $product = Product::withTrashed()->findOrFail($id);
+            $product->restore();
+
+            return redirect()->route('admin.products.index', ['tab' => 'trashed'])
+                ->with('success', 'Product restored successfully!');
+        } catch (\Exception $e) {
+            Log::error('Error restoring product', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return back()->withErrors(['error' => 'Failed to restore product. ' . $e->getMessage()]);
+        }
+    }
+
     public function saveAsDraft(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'sku' => 'nullable|string|unique:products,sku',
-            'category_id' => 'required|exists:categories,id',
-            'description' => 'nullable|string',
-            'highlights' => 'nullable|string',
-            'price' => 'nullable|numeric|min:0',
-            'stock' => 'nullable|integer|min:0',
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'category_id' => 'required|exists:categories,id',
+            ]);
 
-        $validated['dangerous_goods'] = $request->has('dangerous_goods') ? 1 : 0;
+            // Create new product
+            $product = new Product();
+            $product->name = $validated['name'];
+            $product->category_id = $validated['category_id'];
+            $product->slug = Str::slug($validated['name']);
+            $product->is_draft = true;
+            $product->status = 'draft';
 
-        return redirect()->route('admin.products.index')
-        ->with('success', 'Product saved as draft.');
+            // Optional fields
+            if ($request->filled('description')) {
+                $product->description = $request->description;
+            }
+            if ($request->filled('highlights')) {
+                $product->highlights = $request->highlights;
+            }
+            if ($request->filled('price')) {
+                $product->price = $request->price;
+            }
+            if ($request->filled('stock')) {
+                $product->stock = $request->stock;
+            }
+
+            $product->save();
+
+            return redirect()->route('admin.products.index')
+                ->with('success', 'Product saved as draft successfully.');
+        } catch (Exception $e) {
+            Log::error('Draft save error: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['error' => 'Failed to save draft. Please try again.']);
+        }
     }
 
     /**
@@ -352,22 +468,22 @@ class ProductController extends Controller
         try {
             // Get all images for this product
             $product = $image->product;
-            
+
             // Remove primary flag from all other images
             $product->images()->update(['is_primary' => false]);
-            
+
             // Set this image as primary and update sort order
             $image->update([
                 'is_primary' => true,
                 'sort_order' => 0
             ]);
-            
+
             // Reorder other images
             $otherImages = $product->images()
                 ->where('id', '!=', $image->id)
                 ->orderBy('sort_order')
                 ->get();
-            
+
             foreach ($otherImages as $index => $otherImage) {
                 $otherImage->update(['sort_order' => $index + 1]);
             }
@@ -383,7 +499,7 @@ class ProductController extends Controller
                 'message' => 'Primary image set successfully',
                 'images' => $updatedImages
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to set primary image: ' . $e->getMessage()
@@ -399,12 +515,12 @@ class ProductController extends Controller
         try {
             $product = $image->product;
             $wasPrimary = $image->is_primary;
-            
+
             // Delete the physical file
             if (Storage::exists($image->image_path)) {
                 Storage::delete($image->image_path);
             }
-            
+
             // Delete from database
             $image->delete();
 
@@ -424,7 +540,7 @@ class ProductController extends Controller
                 ->orderBy('is_primary', 'desc')
                 ->orderBy('sort_order')
                 ->get();
-            
+
             foreach ($remainingImages as $index => $img) {
                 $img->update(['sort_order' => $index]);
             }
@@ -434,7 +550,7 @@ class ProductController extends Controller
                 'message' => 'Image deleted successfully',
                 'images' => $remainingImages
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete image: ' . $e->getMessage()
@@ -462,10 +578,10 @@ class ProductController extends Controller
             $uploadedImages = [];
             foreach ($request->file('images') as $image) {
                 $path = $image->store('products', 'public');
-                
+
                 // Get the last sort order
                 $lastSortOrder = $product->images()->max('sort_order') ?? -1;
-                
+
                 // Create image record
                 $productImage = $product->images()->create([
                     'image_path' => $path,
@@ -481,7 +597,7 @@ class ProductController extends Controller
                 'message' => count($uploadedImages) . ' images uploaded successfully',
                 'images' => $uploadedImages
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to upload images: ' . $e->getMessage()
@@ -502,7 +618,7 @@ class ProductController extends Controller
             ]);
 
             $images = $request->input('order');
-            
+
             // Update each image's sort order
             foreach ($images as $image) {
                 ProductImage::where('id', $image['id'])->update(['sort_order' => $image['order']]);
@@ -529,7 +645,7 @@ class ProductController extends Controller
                 'success' => true,
                 'message' => 'Image order updated successfully'
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update image order: ' . $e->getMessage()

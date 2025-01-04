@@ -33,18 +33,23 @@ Route::prefix('admin')
             Route::delete('/{id}/force-delete', [CategoryController::class, 'forceDelete'])->name('categories.force-delete');
         });
 
-        Route::get('/products/create', [ProductController::class, 'create'])->name('products.create');
-        Route::post('/products', [ProductController::class, 'store'])->name('products.store');
-        Route::resource('products', ProductController::class);
-        Route::post('products/draft/{product}', [ProductController::class, 'saveAsDraft'])->name('products.draft');
+        // Products Routes
+        Route::prefix('products')->name('products.')->group(function () {
+            Route::get('/', [ProductController::class, 'index'])->name('index');
+            Route::get('/create', [ProductController::class, 'create'])->name('create');
+            Route::post('/', [ProductController::class, 'store'])->name('store');
+            Route::post('/draft', [ProductController::class, 'saveAsDraft'])->name('draft');
+            Route::get('/{product}/edit', [ProductController::class, 'edit'])->name('edit');
+            Route::put('/{product}', [ProductController::class, 'update'])->name('update');
+            Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy');
+            Route::patch('/{id}/restore', [ProductController::class, 'restore'])->name('restore');
+        });
 
         // Product Image Management Routes
         Route::post('/products/{product}/images', [ProductController::class, 'uploadImages'])->name('products.images.upload');
         Route::post('/products/images/{image}/set-primary', [ProductController::class, 'setImageAsPrimary'])->name('products.images.set-primary');
         Route::post('/products/images/reorder', [ProductController::class, 'updateImageOrder'])->name('products.images.reorder');
         Route::delete('/products/images/{image}', [ProductController::class, 'deleteImage'])->name('products.images.delete');
-
-
     }
 );
 

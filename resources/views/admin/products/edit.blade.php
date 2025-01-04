@@ -127,10 +127,10 @@
                             <label for="status" class="block text-sm font-medium text-gray-700">Status <span class="text-red-500">*</span></label>
                             <div class="mt-2" x-data="{ open: false, selected: '{{ old('status', $product->status) }}' }">
                                 <div class="relative">
-                                    <button type="button" 
-                                        @click="open = !open" 
+                                    <button type="button"
+                                        @click="open = !open"
                                         class="bg-white relative w-full border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                        aria-haspopup="listbox" 
+                                        aria-haspopup="listbox"
                                         :aria-expanded="open">
                                         <span x-text="selected === 'active' ? 'Active' : (selected === 'draft' ? 'Draft' : (selected === 'archived' ? 'Archived' : 'Select status'))"
                                             class="block truncate capitalize"></span>
@@ -141,7 +141,7 @@
                                         </span>
                                     </button>
 
-                                    <div x-show="open" 
+                                    <div x-show="open"
                                         @click.away="open = false"
                                         class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
                                         x-transition:enter="transition ease-out duration-100"
@@ -150,7 +150,7 @@
                                         x-transition:leave="transition ease-in duration-75"
                                         x-transition:leave-start="transform opacity-100 scale-100"
                                         x-transition:leave-end="transform opacity-0 scale-95">
-                                        <div @click="selected = 'active'; open = false" 
+                                        <div @click="selected = 'active'; open = false"
                                             :class="{ 'bg-blue-50 text-blue-900': selected === 'active' }"
                                             class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-blue-50">
                                             <span class="block truncate">Active</span>
@@ -384,9 +384,9 @@
                                         search: '',
                                         selected: @json(old('express_delivery_countries', $product->express_delivery_countries ?? [])),
                                         options: [
-                                            'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany', 
-                                            'France', 'Italy', 'Spain', 'Netherlands', 'Belgium', 'Switzerland', 
-                                            'Sweden', 'Norway', 'Denmark', 'Finland', 'Japan', 'South Korea', 
+                                            'United States', 'United Kingdom', 'Canada', 'Australia', 'Germany',
+                                            'France', 'Italy', 'Spain', 'Netherlands', 'Belgium', 'Switzerland',
+                                            'Sweden', 'Norway', 'Denmark', 'Finland', 'Japan', 'South Korea',
                                             'Singapore', 'Hong Kong', 'New Zealand'
                                         ],
                                         get filteredOptions() {
@@ -405,7 +405,7 @@
                                     <label for="express_delivery_countries" class="block text-sm font-medium text-gray-700 mb-2">
                                         Express Delivery Countries
                                     </label>
-                                    
+
                                     <!-- Selected Countries Tags -->
                                     <div class="mb-2 flex flex-wrap gap-2">
                                         <template x-for="(country, index) in selected" :key="index">
@@ -423,14 +423,14 @@
 
                                     <!-- Search Input -->
                                     <div class="relative">
-                                        <input type="text" 
+                                        <input type="text"
                                             x-model="search"
                                             @keydown.enter.prevent="if(filteredOptions.length > 0) addCountry(filteredOptions[0])"
                                             class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
                                             placeholder="Search countries...">
-                                        
+
                                         <!-- Dropdown -->
-                                        <div x-show="search.length > 0" 
+                                        <div x-show="search.length > 0"
                                             class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm"
                                             x-cloak>
                                             <template x-for="country in filteredOptions" :key="country">
@@ -440,7 +440,7 @@
                                                     <span x-text="country" class="block truncate"></span>
                                                 </div>
                                             </template>
-                                            <div x-show="filteredOptions.length === 0" 
+                                            <div x-show="filteredOptions.length === 0"
                                                 class="cursor-default select-none relative py-2 pl-3 pr-9 text-gray-500">
                                                 No countries found
                                             </div>
