@@ -209,7 +209,9 @@
     <!-- Products Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         @foreach($products as $product)
-            <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
+            <div class="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
+                 ondblclick="window.location.href='{{ route('admin.products.edit', $product) }}'"
+                 style="cursor: pointer">
                 <!-- Product Image -->
                 <div class="aspect-w-16 aspect-h-9 bg-gray-100">
                     @if($product->primary_image_url)
