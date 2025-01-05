@@ -266,6 +266,18 @@
                                         <i class="fas fa-trash-restore"></i>
                                     </button>
                                 </form>
+                                <form action="{{ route('admin.products.force-delete', $product->id) }}"
+                                      method="POST"
+                                      class="inline-block"
+                                      onsubmit="return confirm('Are you sure you want to permanently delete this product? This action cannot be undone.')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                            class="inline-flex items-center px-3 py-1 border border-transparent shadow-sm text-sm font-medium rounded text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                            title="Permanently Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
                             @else
                                 <a href="{{ route('admin.products.edit', $product) }}"
                                    class="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-sm font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">

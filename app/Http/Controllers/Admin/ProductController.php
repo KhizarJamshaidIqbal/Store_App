@@ -242,13 +242,12 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
-        // Get images ordered by is_primary first, then by sort_order
-        $product->load(['images' => function($query) {
-            $query->orderByDesc('is_primary')->orderBy('sort_order');
-        }]);
+        $categories = Category::whereNull('parent_id')
+            ->with('childrenRecursive')
+            ->orderBy('sort_order')
+            ->get();
 
-        // Get all categories
-        $categories = Category::all();
+        $product->load('category.parent');
 
         return view('admin.products.edit', compact('product', 'categories'));
     }
@@ -289,7 +288,6 @@ class ProductController extends Controller
                 'package_width' => 'nullable|numeric',
                 'package_height' => 'nullable|numeric',
                 'dangerous_goods' => 'boolean',
-                'is_draft' => 'boolean',
                 'status' => 'required|string|in:active,inactive,draft',
                 'variants' => 'nullable|array',
                 'variants.*.name' => 'required|string|max:255',
@@ -329,8 +327,7 @@ class ProductController extends Controller
                 'package_length' => $validatedData['package_length'],
                 'package_width' => $validatedData['package_width'],
                 'package_height' => $validatedData['package_height'],
-                'dangerous_goods' => $request->has('dangerous_goods'),
-                'is_draft' => $request->has('is_draft'),
+                'dangerous_goods' => $validatedData['dangerous_goods'] ?? false,
                 'status' => $validatedData['status']
             ]);
 
@@ -406,15 +403,32 @@ class ProductController extends Controller
             $product = Product::withTrashed()->findOrFail($id);
             $product->restore();
 
-            return redirect()->route('admin.products.index', ['tab' => 'trashed'])
-                ->with('success', 'Product restored successfully!');
-        } catch (\Exception $e) {
-            Log::error('Error restoring product', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+            return redirect()->back()->with('success', 'Product restored successfully.');
+        } catch (Exception $e) {
+            Log::error('Error restoring product: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to restore product.');
+        }
+    }
 
-            return back()->withErrors(['error' => 'Failed to restore product. ' . $e->getMessage()]);
+    public function forceDelete($id)
+    {
+        try {
+            $product = Product::withTrashed()->findOrFail($id);
+
+            // Delete product images from storage
+            foreach ($product->images as $image) {
+                if (Storage::exists($image->image_path)) {
+                    Storage::delete($image->image_path);
+                }
+            }
+
+            // Force delete the product and its relationships
+            $product->forceDelete();
+
+            return redirect()->back()->with('success', 'Product permanently deleted.');
+        } catch (Exception $e) {
+            Log::error('Error force deleting product: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to permanently delete product.');
         }
     }
 
@@ -611,34 +625,10 @@ class ProductController extends Controller
     public function updateImageOrder(Request $request)
     {
         try {
-            $request->validate([
-                'order' => 'required|array',
-                'order.*.id' => 'required|exists:product_images,id',
-                'order.*.order' => 'required|integer|min:0'
-            ]);
+            $imageIds = $request->get('imageIds', []);
 
-            $images = $request->input('order');
-
-            // Update each image's sort order
-            foreach ($images as $image) {
-                ProductImage::where('id', $image['id'])->update(['sort_order' => $image['order']]);
-            }
-
-            // Get the first image from the order
-            if (count($images) > 0) {
-                $firstImage = ProductImage::find($images[0]['id']);
-                if ($firstImage) {
-                    $updatedImages = $firstImage->product->images()
-                        ->orderBy('is_primary', 'desc')
-                        ->orderBy('sort_order')
-                        ->get();
-
-                    return response()->json([
-                        'success' => true,
-                        'message' => 'Image order updated successfully',
-                        'images' => $updatedImages
-                    ]);
-                }
+            foreach ($imageIds as $index => $id) {
+                ProductImage::where('id', $id)->update(['order' => $index]);
             }
 
             return response()->json([
@@ -646,6 +636,7 @@ class ProductController extends Controller
                 'message' => 'Image order updated successfully'
             ]);
         } catch (Exception $e) {
+            Log::error('Error updating image order: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update image order: ' . $e->getMessage()

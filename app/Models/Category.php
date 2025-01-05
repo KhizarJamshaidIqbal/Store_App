@@ -44,19 +44,36 @@ class Category extends Model
         });
     }
 
-    public function childrenRecursive()
+    public function getPath()
     {
-        return $this->hasMany(Category::class, 'parent_id')
-            ->with(['childrenRecursive' => function($query) {
-                $query->orderBy('sort_order');
-            }])
-            ->orderBy('sort_order');
+        $path = [$this->id];
+        $parent = $this->parent;
+
+        while ($parent) {
+            array_unshift($path, $parent->id);
+            $parent = $parent->parent;
+        }
+
+        return $path;
+    }
+
+    public static function getTree()
+    {
+        return static::with('children')
+            ->whereNull('parent_id')
+            ->orderBy('sort_order')
+            ->get();
     }
 
     public function children()
     {
         return $this->hasMany(Category::class, 'parent_id')
             ->orderBy('sort_order');
+    }
+
+    public function childrenRecursive()
+    {
+        return $this->children()->with('childrenRecursive');
     }
 
     public function parent()

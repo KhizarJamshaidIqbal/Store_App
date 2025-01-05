@@ -43,6 +43,7 @@ Route::prefix('admin')
             Route::put('/{product}', [ProductController::class, 'update'])->name('update');
             Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy');
             Route::patch('/{id}/restore', [ProductController::class, 'restore'])->name('restore');
+            Route::delete('/{id}/force-delete', [ProductController::class, 'forceDelete'])->name('force-delete');
         });
 
         // Product Image Management Routes

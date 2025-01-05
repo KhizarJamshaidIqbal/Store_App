@@ -51,7 +51,7 @@ class CategoryController extends Controller
                 'allCategories'
             ));
         } catch (\Exception $e) {
-            \Log::error('Error in CategoryController@index: ' . $e->getMessage());
+            Log::error('Error in CategoryController@index: ' . $e->getMessage());
             return back()->with('error', 'An error occurred while loading categories.');
         }
     }
@@ -83,7 +83,7 @@ class CategoryController extends Controller
             ]);
 
             $validated['slug'] = $this->generateUniqueSlug($validated['name']);
-            
+
             $category = Category::create($validated);
 
             return redirect()
@@ -181,7 +181,7 @@ class CategoryController extends Controller
         try {
             $category = Category::onlyTrashed()->findOrFail($id);
             $category->restore();
-            
+
             return redirect()->route('admin.categories.trashed')
                 ->with('success', 'Category restored successfully.');
         } catch (\Exception $e) {
@@ -195,7 +195,7 @@ class CategoryController extends Controller
         try {
             $category = Category::onlyTrashed()->findOrFail($id);
             $category->forceDelete();
-            
+
             return redirect()->route('admin.categories.trashed')
                 ->with('success', 'Category permanently deleted.');
         } catch (\Exception $e) {
@@ -208,20 +208,20 @@ class CategoryController extends Controller
     {
         $slug = Str::slug($name);
         $count = 1;
-        
+
         while (true) {
             $query = Category::where('slug', $slug);
             if ($excludeId) {
                 $query->where('id', '!=', $excludeId);
             }
-            
+
             if (!$query->exists()) {
                 break;
             }
-            
+
             $slug = Str::slug($name) . '-' . $count++;
         }
-        
+
         return $slug;
     }
 }
