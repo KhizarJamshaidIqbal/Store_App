@@ -11,8 +11,8 @@
                     <h1 class="text-2xl font-semibold text-gray-800">Category Management</h1>
                     <p class="mt-1 text-sm text-gray-500">Organize and manage your product categories efficiently</p>
                 </div>
-                <a href="{{ route('admin.categories.create') }}" 
-                   class="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors duration-200">
+                <a href="{{ route('admin.categories.create') }}"
+                   class="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors duration-200 hover:animate-bounce">
                     <i class="fas fa-plus mr-2"></i>
                     Add New Category
                 </a>
@@ -70,7 +70,7 @@
                     </div>
                 </div>
 
-                <a href="{{ route('admin.categories.trashed') }}" class="p-4 bg-gray-50 hover:bg-gray-100 rounded-lg flex items-center space-x-3 transition-colors duration-200">
+                <a href="{{ route('admin.categories.trashed') }}" class="p-4 bg-gray-50 hover:bg-gray-100 rounded-lg flex items-center space-x-3 transition-colors duration-200 hover:animate-bounce">
                     <div class="p-3 bg-gray-200 rounded-lg">
                         <i class="fas fa-trash-alt text-gray-600"></i>
                     </div>
@@ -90,16 +90,16 @@
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <i class="fas fa-search text-gray-400"></i>
                     </div>
-                    <input type="text" 
+                    <input type="text"
                            id="searchInput"
-                           placeholder="Search categories..." 
+                           placeholder="Search categories..."
                            class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
 
                 <!-- Filter Actions -->
                 <div class="flex items-center space-x-2">
                     <div class="relative">
-                        <select id="categoryFilter" 
+                        <select id="categoryFilter"
                                 class="appearance-none w-44 pl-10 pr-10 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white cursor-pointer">
                             <option value="all">All Categories</option>
                             <option value="active">Active Only</option>
@@ -115,13 +115,13 @@
                         </div>
                     </div>
 
-                    <button onclick="expandAll()" 
+                    <button onclick="expandAll()"
                             class="inline-flex items-center px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                         <i class="fas fa-expand text-gray-400 mr-2"></i>
                         Expand All
                     </button>
 
-                    <button onclick="collapseAll()" 
+                    <button onclick="collapseAll()"
                             class="inline-flex items-center px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                         <i class="fas fa-compress text-gray-400 mr-2"></i>
                         Collapse All
@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     searchInput.addEventListener('input', function(e) {
         const searchTerm = e.target.value.toLowerCase();
-        
+
         categoryItems.forEach(item => {
             const categoryName = item.querySelector('span').textContent.toLowerCase();
             const shouldShow = categoryName.includes(searchTerm);
@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function() {
             const categoryItem = this.closest('.category-item');
             const childrenContainer = categoryItem.querySelector('.category-children');
-            
+
             if (childrenContainer) {
                 const isHidden = childrenContainer.classList.contains('hidden');
                 childrenContainer.classList.toggle('hidden');
@@ -204,16 +204,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Category filter functionality
     const categoryFilter = document.getElementById('categoryFilter');
-    
+
     categoryFilter.addEventListener('change', function() {
         const filterValue = this.value;
-        
+
         categoryItems.forEach(item => {
             const level = parseInt(item.dataset.level);
             const isActive = item.querySelector('.bg-green-100') !== null;
-            
+
             let shouldShow = true;
-            
+
             switch(filterValue) {
                 case 'active':
                     shouldShow = isActive;
@@ -228,7 +228,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     shouldShow = level > 0;
                     break;
             }
-            
+
             item.style.display = shouldShow ? 'block' : 'none';
         });
     });
