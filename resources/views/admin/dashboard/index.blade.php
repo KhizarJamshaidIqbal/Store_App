@@ -120,7 +120,7 @@
                             Active Products
                         </p>
                         <p class="text-lg font-semibold text-gray-700">
-                            {{ \App\Models\Product::where('status', true)->count() }}
+                            {{ \App\Models\Product::where('status', 'active')->count() }}
                         </p>
                     </div>
                 </div>
