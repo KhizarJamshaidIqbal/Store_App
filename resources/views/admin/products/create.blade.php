@@ -176,10 +176,48 @@
                             </svg>
                             Product Specifications
                         </h3>
-                        <p class="mt-1 text-sm text-gray-500">Add the product specifications.</p>
+                        <p class="mt-1 text-sm text-gray-500">Add detailed specifications about the product.</p>
                     </div>
 
                     <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                        <div class="sm:col-span-2">
+                            <label for="pack_type" class="block text-sm font-medium text-gray-700">Pack Type</label>
+                            <div class="mt-1">
+                                <select id="pack_type" name="pack_type" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                                    <option value="">Select Pack Type</option>
+                                    <option value="single" {{ old('pack_type') == 'single' ? 'selected' : '' }}>Single Pack</option>
+                                    <option value="bundle" {{ old('pack_type') == 'bundle' ? 'selected' : '' }}>Bundle Pack</option>
+                                    <option value="combo" {{ old('pack_type') == 'combo' ? 'selected' : '' }}>Combo Pack</option>
+                                    <option value="multi" {{ old('pack_type') == 'multi' ? 'selected' : '' }}>Multi Pack</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label for="volume" class="block text-sm font-medium text-gray-700">Volume</label>
+                            <div class="mt-1 relative rounded-md shadow-sm">
+                                <input type="number" name="volume" id="volume" value="{{ old('volume') }}" step="0.01"
+                                    class="focus:ring-blue-500 focus:border-blue-500 block w-full pr-12 sm:text-sm border-gray-300 rounded-md"
+                                    placeholder="0.00">
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                    <span class="text-gray-500 sm:text-sm">ml</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <label for="brand_classification" class="block text-sm font-medium text-gray-700">Brand Classification</label>
+                            <div class="mt-1">
+                                <select id="brand_classification" name="brand_classification" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                                    <option value="">Select Classification</option>
+                                    <option value="premium" {{ old('brand_classification') == 'premium' ? 'selected' : '' }}>Premium</option>
+                                    <option value="standard" {{ old('brand_classification') == 'standard' ? 'selected' : '' }}>Standard</option>
+                                    <option value="economy" {{ old('brand_classification') == 'economy' ? 'selected' : '' }}>Economy</option>
+                                    <option value="luxury" {{ old('brand_classification') == 'luxury' ? 'selected' : '' }}>Luxury</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <div class="sm:col-span-3">
                             <label for="texture" class="block text-sm font-medium text-gray-700">Texture</label>
                             <div class="mt-1">
@@ -439,7 +477,7 @@
                                                 class="absolute inset-0 h-full w-full flex items-center justify-center transition-opacity"
                                                 aria-hidden="true">
                                                 <svg class="h-3 w-3 text-blue-600" fill="currentColor" viewBox="0 0 12 12">
-                                                    <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414a1 1 0 001.414 1.414l-1.414 1.414a1 1 0 00-1.414 1.414z" />
+                                                    <path d="M3.707 5.293a1 1 0 00-1.414-1.414l1.414-1.414a1 1 0 001.414 1.414l-1.414 1.414a1 1 0 01-1.414 1.414l-1.414-1.414a1 1 0 00-1.414 1.414l1.414 1.414a1 1 0 001.414 1.414l1.414-1.414a1 1 0 001.414-1.414l-1.414-1.414a1 1 0 00-1.414-1.414z" />
                                                 </svg>
                                             </span>
                                         </span>
@@ -613,7 +651,7 @@
                                        @change="handleFiles($event)">
 
                                 <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
 
                                 <div class="mt-4">

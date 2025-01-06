@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ProfileController;
 use App\Models\ProductImage;
 use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
@@ -51,6 +52,10 @@ Route::prefix('admin')
         Route::post('/products/images/{image}/set-primary', [ProductController::class, 'setImageAsPrimary'])->name('products.images.set-primary');
         Route::post('/products/images/reorder', [ProductController::class, 'updateImageOrder'])->name('products.images.reorder');
         Route::delete('/products/images/{image}', [ProductController::class, 'deleteImage'])->name('products.images.delete');
+
+        // Profile Routes
+        Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
     }
 );
 

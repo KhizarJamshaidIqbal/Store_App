@@ -27,7 +27,7 @@ class CategoryController extends Controller
                 }])
                 ->whereNull('deleted_at')
                 ->orderBy('sort_order')
-                ->get();
+                ->paginate(10);
 
             // Get statistics using Eloquent
             $totalCategories = Category::count();
