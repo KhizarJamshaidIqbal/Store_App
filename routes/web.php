@@ -5,9 +5,11 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\PasswordResetController;
 use App\Models\ProductImage;
 use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 
 // Authentication Routes
 Auth::routes();
@@ -17,47 +19,27 @@ Route::prefix('admin')
     ->name('admin.')
     ->middleware(['auth'])
     ->group(function () {
-        Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-
-        // Categories
-        Route::prefix('categories')->group(function () {
-            Route::get('/', [CategoryController::class, 'index'])->name('categories.index');
-            Route::get('/create', [CategoryController::class, 'create'])->name('categories.create');
-            Route::post('/', [CategoryController::class, 'store'])->name('categories.store');
-            Route::get('/{category}/edit', [CategoryController::class, 'edit'])->name('categories.edit');
-            Route::put('/{category}', [CategoryController::class, 'update'])->name('categories.update');
-            Route::delete('/{category}', [CategoryController::class, 'destroy'])->name('categories.destroy');
-
-            // Trashed Categories Routes
-            Route::get('/trashed', [CategoryController::class, 'trashed'])->name('categories.trashed');
-            Route::post('/{id}/restore', [CategoryController::class, 'restore'])->name('categories.restore');
-            Route::delete('/{id}/force-delete', [CategoryController::class, 'forceDelete'])->name('categories.force-delete');
-        });
-
-        // Products Routes
-        Route::prefix('products')->name('products.')->group(function () {
-            Route::get('/', [ProductController::class, 'index'])->name('index');
-            Route::get('/create', [ProductController::class, 'create'])->name('create');
-            Route::post('/', [ProductController::class, 'store'])->name('store');
-            Route::post('/draft', [ProductController::class, 'saveAsDraft'])->name('draft');
-            Route::get('/{product}/edit', [ProductController::class, 'edit'])->name('edit');
-            Route::put('/{product}', [ProductController::class, 'update'])->name('update');
-            Route::delete('/{product}', [ProductController::class, 'destroy'])->name('destroy');
-            Route::patch('/{id}/restore', [ProductController::class, 'restore'])->name('restore');
-            Route::delete('/{id}/force-delete', [ProductController::class, 'forceDelete'])->name('force-delete');
-        });
-
-        // Product Image Management Routes
-        Route::post('/products/{product}/images', [ProductController::class, 'uploadImages'])->name('products.images.upload');
-        Route::post('/products/images/{image}/set-primary', [ProductController::class, 'setImageAsPrimary'])->name('products.images.set-primary');
-        Route::post('/products/images/reorder', [ProductController::class, 'updateImageOrder'])->name('products.images.reorder');
-        Route::delete('/products/images/{image}', [ProductController::class, 'deleteImage'])->name('products.images.delete');
-
-        // Profile Routes
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
-        Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    }
-);
+        Route::put('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+        
+        // Categories Routes
+        Route::get('/categories/trashed', [CategoryController::class, 'trashed'])->name('categories.trashed');
+        Route::post('/categories/{id}/restore', [CategoryController::class, 'restore'])->name('categories.restore');
+        Route::delete('/categories/{id}/force-delete', [CategoryController::class, 'forceDelete'])->name('categories.force-delete');
+        Route::resource('categories', CategoryController::class);
+        
+        // Products Routes
+        Route::resource('products', ProductController::class);
+        Route::delete('/products/image/{image}', [ProductController::class, 'destroyImage'])->name('products.destroyImage');
+    });
+
+Route::middleware('auth')->group(function () {
+    // Forgot Password Routes
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
+    Route::get('/reset-password/{token}', [PasswordResetController::class, 'showReset'])->name('password.reset');
+    Route::post('/reset-password', [PasswordResetController::class, 'reset'])->name('password.update');
+});
 
 // Redirect root to admin dashboard
 Route::get('/', function () {

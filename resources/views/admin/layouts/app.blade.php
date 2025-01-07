@@ -9,7 +9,20 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio"></script>
     <!-- Alpine.js -->
-    <script defer src="https://unpkg.com/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    <script src="https://unpkg.com/alpinejs@3.13.3/dist/cdn.min.js" defer></script>
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('modal', {
+                current: null,
+                open(name) {
+                    this.current = name;
+                },
+                close() {
+                    this.current = null;
+                }
+            });
+        });
+    </script>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://site-assets.fontawesome.com/releases/v6.5.1/css/all.css">

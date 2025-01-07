@@ -1,12 +1,12 @@
-<tr class="category-row hover:bg-gray-50/50 transition-colors duration-150" 
-    data-parent-id="{{ $category->parent_id }}" 
+<tr class="category-row hover:bg-gray-50/50 transition-colors duration-150"
+    data-parent-id="{{ $category->parent_id }}"
     data-category-id="{{ $category->id }}">
     <td class="px-6 py-4 whitespace-nowrap">
         <div class="flex items-center">
             <div class="flex items-center" style="margin-left: {{ ($level ?? 0) * 1.5 }}rem;">
                 @if($category->childrenRecursive->count() > 0)
-                    <button type="button" 
-                            class="toggle-btn w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 focus:outline-none transition-colors duration-150" 
+                    <button type="button"
+                            class="toggle-btn w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 focus:outline-none transition-colors duration-150"
                             data-id="{{ $category->id }}">
                         <i class="fas fa-plus-square text-lg"></i>
                     </button>
@@ -24,17 +24,17 @@
     </td>
     <td class="px-6 py-4 whitespace-nowrap text-right">
         <div class="flex items-center justify-end space-x-4">
-            <a href="{{ route('admin.categories.edit', $category->id) }}" 
+            <a href="{{ route('admin.categories.edit', $category->id) }}"
                class="text-blue-600 hover:text-blue-800 transition-colors duration-150">
                 <i class="fas fa-edit"></i>
             </a>
-            <form action="{{ route('admin.categories.destroy', $category->id) }}" 
-                  method="POST" 
+            <form action="{{ route('admin.categories.destroy', $category->id) }}"
+                  method="POST"
                   class="inline-block"
                   onsubmit="return confirm('Are you sure you want to delete this category? This action cannot be undone.');">
                 @csrf
                 @method('DELETE')
-                <button type="submit" 
+                <button type="submit"
                         class="text-red-600 hover:text-red-800 transition-colors duration-150">
                     <i class="fas fa-trash-alt"></i>
                 </button>

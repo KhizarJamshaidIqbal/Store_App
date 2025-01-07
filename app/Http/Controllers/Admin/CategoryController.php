@@ -165,43 +165,56 @@ class CategoryController extends Controller
         }
     }
 
+    /**
+     * Display the specified category.
+     *
+     * @param  \App\Models\Category  $category
+     * @return \Illuminate\View\View
+     */
+    public function show(Category $category)
+    {
+        return view('admin.categories.show', compact('category'));
+    }
+
+    /**
+     * Display a listing of the trashed categories.
+     *
+     * @return \Illuminate\View\View
+     */
     public function trashed()
     {
-        try {
-            $trashedCategories = Category::onlyTrashed()->get();
-            return view('admin.categories.trashed', compact('trashedCategories'));
-        } catch (\Exception $e) {
-            Log::error('Category Trashed Error: ' . $e->getMessage());
-            return back()->with('error', 'Error loading trashed categories: ' . $e->getMessage());
-        }
+        $trashedCategories = Category::onlyTrashed()->paginate(10);
+        return view('admin.categories.trashed', compact('trashedCategories'));
     }
 
+    /**
+     * Restore the specified category from trash.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function restore($id)
     {
-        try {
-            $category = Category::onlyTrashed()->findOrFail($id);
-            $category->restore();
+        $category = Category::onlyTrashed()->findOrFail($id);
+        $category->restore();
 
-            return redirect()->route('admin.categories.trashed')
-                ->with('success', 'Category restored successfully.');
-        } catch (\Exception $e) {
-            Log::error('Category Restore Error: ' . $e->getMessage());
-            return back()->with('error', 'Error restoring category: ' . $e->getMessage());
-        }
+        return redirect()->route('admin.categories.trashed')
+            ->with('success', 'Category restored successfully');
     }
 
+    /**
+     * Permanently delete the specified category.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function forceDelete($id)
     {
-        try {
-            $category = Category::onlyTrashed()->findOrFail($id);
-            $category->forceDelete();
+        $category = Category::onlyTrashed()->findOrFail($id);
+        $category->forceDelete();
 
-            return redirect()->route('admin.categories.trashed')
-                ->with('success', 'Category permanently deleted.');
-        } catch (\Exception $e) {
-            Log::error('Category Force Delete Error: ' . $e->getMessage());
-            return back()->with('error', 'Error permanently deleting category: ' . $e->getMessage());
-        }
+        return redirect()->route('admin.categories.trashed')
+            ->with('success', 'Category permanently deleted');
     }
 
     protected function generateUniqueSlug($name, $excludeId = null)
