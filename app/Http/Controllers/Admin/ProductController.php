@@ -475,172 +475,97 @@ class ProductController extends Controller
     }
 
     /**
-     * Set image as primary
-     */
-    public function setImageAsPrimary(ProductImage $image)
-    {
-        try {
-            // Get all images for this product
-            $product = $image->product;
-
-            // Remove primary flag from all other images
-            $product->images()->update(['is_primary' => false]);
-
-            // Set this image as primary and update sort order
-            $image->update([
-                'is_primary' => true,
-                'sort_order' => 0
-            ]);
-
-            // Reorder other images
-            $otherImages = $product->images()
-                ->where('id', '!=', $image->id)
-                ->orderBy('sort_order')
-                ->get();
-
-            foreach ($otherImages as $index => $otherImage) {
-                $otherImage->update(['sort_order' => $index + 1]);
-            }
-
-            // Return updated images for frontend
-            $updatedImages = $product->images()
-                ->orderBy('is_primary', 'desc')
-                ->orderBy('sort_order')
-                ->get();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Primary image set successfully',
-                'images' => $updatedImages
-            ]);
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to set primary image: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Delete product image
-     */
-    public function deleteImage(ProductImage $image)
-    {
-        try {
-            $product = $image->product;
-            $wasPrimary = $image->is_primary;
-
-            // Delete the physical file
-            if (Storage::exists($image->image_path)) {
-                Storage::delete($image->image_path);
-            }
-
-            // Delete from database
-            $image->delete();
-
-            // If this was the primary image, set the first remaining image as primary
-            if ($wasPrimary) {
-                $firstImage = $product->images()->first();
-                if ($firstImage) {
-                    $firstImage->update([
-                        'is_primary' => true,
-                        'sort_order' => 0
-                    ]);
-                }
-            }
-
-            // Reorder remaining images
-            $remainingImages = $product->images()
-                ->orderBy('is_primary', 'desc')
-                ->orderBy('sort_order')
-                ->get();
-
-            foreach ($remainingImages as $index => $img) {
-                $img->update(['sort_order' => $index]);
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Image deleted successfully',
-                'images' => $remainingImages
-            ]);
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to delete image: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Upload product images
+     * Upload images for a product
      */
     public function uploadImages(Request $request, Product $product)
     {
-        try {
-            $request->validate([
-                'images.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240'
-            ]);
+        $request->validate([
+            'images.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240'
+        ]);
 
-            if (!$request->hasFile('images')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No images were uploaded.'
-                ], 400);
-            }
+        $uploadedImages = [];
 
-            $uploadedImages = [];
+        if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
                 $path = $image->store('products', 'public');
 
-                // Get the last sort order
-                $lastSortOrder = $product->images()->max('sort_order') ?? -1;
-
-                // Create image record
                 $productImage = $product->images()->create([
                     'image_path' => $path,
-                    'sort_order' => $lastSortOrder + 1,
-                    'is_primary' => $product->images()->count() === 0 // Set as primary if it's the first image
+                    'sort_order' => $product->images()->count() + 1,
+                    'is_primary' => $product->images()->count() === 0 // First image is primary
                 ]);
 
                 $uploadedImages[] = $productImage;
             }
-
-            return response()->json([
-                'success' => true,
-                'message' => count($uploadedImages) . ' images uploaded successfully',
-                'images' => $uploadedImages
-            ]);
-        } catch (Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to upload images: ' . $e->getMessage()
-            ], 500);
         }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Images uploaded successfully',
+            'images' => $uploadedImages
+        ]);
     }
 
     /**
-     * Update image order for a product
+     * Delete a product image
      */
-    public function updateImageOrder(Request $request)
+    public function deleteImage(ProductImage $image)
     {
-        try {
-            $imageIds = $request->get('imageIds', []);
-
-            foreach ($imageIds as $index => $id) {
-                ProductImage::where('id', $id)->update(['order' => $index]);
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Image order updated successfully'
-            ]);
-        } catch (Exception $e) {
-            Log::error('Error updating image order: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update image order: ' . $e->getMessage()
-            ], 500);
+        // Delete the file from storage
+        if (Storage::disk('public')->exists($image->image_path)) {
+            Storage::disk('public')->delete($image->image_path);
         }
+
+        // If this was the primary image, set another image as primary
+        if ($image->is_primary) {
+            $nextImage = $image->product->images()->where('id', '!=', $image->id)->first();
+            if ($nextImage) {
+                $nextImage->update(['is_primary' => true]);
+            }
+        }
+
+        $image->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Image deleted successfully'
+        ]);
+    }
+
+    /**
+     * Set an image as primary
+     */
+    public function setImageAsPrimary(ProductImage $image)
+    {
+        // Remove primary status from all other images of this product
+        $image->product->images()->where('id', '!=', $image->id)->update(['is_primary' => false]);
+
+        // Set this image as primary
+        $image->update(['is_primary' => true]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Primary image set successfully'
+        ]);
+    }
+
+    /**
+     * Reorder product images
+     */
+    public function reorderImages(Request $request)
+    {
+        $request->validate([
+            'order' => 'required|array',
+            'order.*' => 'exists:product_images,id'
+        ]);
+
+        foreach ($request->order as $index => $id) {
+            ProductImage::where('id', $id)->update(['sort_order' => $index + 1]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Images reordered successfully'
+        ]);
     }
 }

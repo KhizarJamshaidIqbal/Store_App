@@ -597,25 +597,21 @@
                                 return true;
                             });
                             if (validFiles.length) {
-                                this.files = [...this.files, ...validFiles];
-                                this.previewFiles();
-                            }
-                        },
-                        previewFiles() {
-                            this.files.forEach((file, index) => {
-                                if (!file.preview) {
+                                validFiles.forEach(file => {
                                     const reader = new FileReader();
                                     reader.onload = (e) => {
-                                        file.preview = e.target.result;
-                                        this.files = [...this.files];
+                                        this.files.push({
+                                            file: file,
+                                            preview: e.target.result,
+                                            name: file.name
+                                        });
                                     };
                                     reader.readAsDataURL(file);
-                                }
-                            });
+                                });
+                            }
                         },
                         removeFile(index) {
                             this.files.splice(index, 1);
-                            this.files = [...this.files];
                         },
                         handleDragStart(index, event) {
                             this.draggedItem = index;
@@ -635,101 +631,98 @@
                         }
                     }"
                     class="space-y-4">
+                        <!-- Error Message -->
+                        <div x-show="uploadError" x-text="uploadError" class="text-red-600 text-sm"></div>
+
                         <!-- Empty State Upload Area -->
                         <div x-show="files.length === 0"
-                             class="border border-dashed border-gray-300 rounded-lg bg-white"
+                             class="border-2 border-dashed border-gray-300 rounded-lg bg-white hover:border-blue-500 transition-colors duration-200"
                              @drop.prevent="handleFiles($event)"
                              @dragover.prevent="$event.target.classList.add('border-blue-500')"
                              @dragleave.prevent="$event.target.classList.remove('border-blue-500')">
                             <div class="p-12 text-center">
                                 <input type="file"
                                        name="images[]"
-                                       id="empty-state-images"
+                                       id="product-images"
                                        multiple
                                        accept="image/*"
                                        class="hidden"
                                        @change="handleFiles($event)">
 
                                 <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                 </svg>
 
                                 <div class="mt-4">
-                                    <label for="empty-state-images" class="cursor-pointer">
-                                        <span class="text-blue-600 hover:text-blue-700">Upload Images</span>
-                                        <span class="text-gray-600"> or drag and drop</span>
+                                    <label for="product-images" class="cursor-pointer">
+                                        <span class="mt-2 block text-sm font-medium text-blue-600">
+                                            Add More Images
+                                        </span>
+                                        <span class="mt-1 block text-xs text-gray-500">
+                                            or drag and drop
+                                        </span>
                                     </label>
-                                    <p class="mt-1 text-sm text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                                    <p class="mt-1 text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Image Grid -->
                         <div x-show="files.length > 0" class="space-y-4">
-                            <!-- Images List -->
                             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                 <template x-for="(file, index) in files" :key="index">
                                     <div class="relative bg-white rounded-lg shadow-sm overflow-hidden"
                                          draggable="true"
                                          @dragstart="handleDragStart(index, $event)"
                                          @dragend="handleDragEnd($event)"
-                                         @dragover="handleDragOver(index, $event)">
-                                        <div class="aspect-w-4 aspect-h-3">
+                                         @dragover.prevent="handleDragOver(index, $event)">
+                                        
+                                        <!-- Image Preview -->
+                                        <div class="aspect-w-3 aspect-h-2">
                                             <img :src="file.preview"
-                                                 :alt="'Image ' + (index + 1)"
-                                                 class="object-cover w-full h-full">
+                                                 :alt="file.name"
+                                                 class="object-contain w-full h-full">
                                         </div>
 
-                                        <div class="absolute top-0 right-0 p-2">
-                                            <button @click="removeFile(index)"
-                                                    class="p-1 bg-white rounded-full shadow-sm hover:bg-gray-100">
-                                                <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
-                                            </button>
-                                        </div>
+                                        <!-- Remove Button -->
+                                        <button @click.prevent="removeFile(index)"
+                                                type="button"
+                                                class="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow-lg hover:bg-gray-100 focus:outline-none">
+                                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                        </button>
 
-                                        <div class="p-3 flex justify-between items-center">
-                                            <div class="flex items-center space-x-2">
-                                                <span class="text-sm text-gray-600" x-text="'Image ' + (index + 1)"></span>
-                                                <span x-show="index === 0" class="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded">Primary</span>
+                                        <!-- Image Info -->
+                                        <div class="p-3 bg-white">
+                                            <div class="flex items-center justify-between">
+                                                <span class="text-sm font-medium text-gray-900" x-text="'Image ' + (index + 1)"></span>
+                                                <span x-show="index === 0" class="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">Primary</span>
                                             </div>
-                                            <div x-show="files.length > 1" class="text-xs text-gray-500">Drag to reorder</div>
+                                            <p class="mt-1 text-xs text-gray-500" x-text="file.name"></p>
                                         </div>
                                     </div>
                                 </template>
 
                                 <!-- Add More Button -->
-                                <div class="relative bg-white rounded-lg overflow-hidden border-2 border-dashed border-blue-200 hover:border-blue-400 transition-colors">
+                                <label class="relative block cursor-pointer">
                                     <input type="file"
                                            name="images[]"
-                                           id="add-more-images"
                                            multiple
                                            accept="image/*"
                                            class="hidden"
                                            @change="handleFiles($event)">
-
-                                    <label for="add-more-images" class="block cursor-pointer text-center justify-center">
-                                        <div class="h-48 flex items-center justify-center ">
-                                            <div class="text-center justify-center">
-                                                <div class="mb-3">
-                                                    <svg class="mx-auto h-8 w-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4" />
-                                                    </svg>
-                                                </div>
-                                                <span class="block text-sm font-medium text-blue-600">Add More Images</span>
-                                                <span class="block text-xs text-gray-500 mt-1">or drag and drop</span>
-                                            </div>
-                                        </div>
-                                    </label>
-                                </div>
+                                    <div class="h-full border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-blue-500 transition-colors duration-200 flex flex-col items-center justify-center min-h-[200px]">
+                                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                        </svg>
+                                        <span class="mt-2 block text-sm font-medium text-blue-600">
+                                            Add More Images
+                                        </span>
+                                    </div>
+                                </label>
                             </div>
                         </div>
-
-                        <!-- Error Message -->
-                        <div x-show="uploadError"
-                             x-text="uploadError"
-                             class="mt-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md p-2"></div>
                     </div>
                 </div>
 
