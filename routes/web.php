@@ -32,6 +32,7 @@ Route::prefix('admin')
         // Products Routes
         Route::resource('products', ProductController::class);
         Route::delete('/products/image/{image}', [ProductController::class, 'destroyImage'])->name('products.destroyImage');
+        Route::post('/products/draft', [ProductController::class, 'saveAsDraft'])->name('products.draft');
     });
 
 Route::middleware('auth')->group(function () {
