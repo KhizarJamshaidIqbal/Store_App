@@ -615,13 +615,14 @@
                                     </div>
                                 </form>
                             </div>
-                <!-- Image Gallery -->
-                <div id="image-gallery" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                @if($product->images && count($product->images) > 0)
-                @foreach($product->images as $index => $image)
+
+                            <!-- Image Gallery -->
+<div id="image-gallery" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    @if($product->images && count($product->images) > 0)
+        @foreach($product->images as $index => $image)
             <div class="relative group cursor-move rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200" data-id="{{ $image->id }}">
                 <div class="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-t-lg bg-gray-200">
-                    <img src="{{ Storage::url($image->image_path) }}"
+                    <img src="{{ asset('storage/' . $image->image_path) }}"
                         alt="Product image {{ $index + 1 }}"
                         class="object-cover object-center w-full h-full transform group-hover:scale-105 transition-transform duration-300">
                     <div class="absolute inset-0 bg-gradient-to-b from-transparent to-black opacity-0 group-hover:opacity-60 transition-opacity duration-300"></div>
@@ -662,9 +663,10 @@
                     </div>
                 </div>
             </div>
-                @endforeach
-                @endif
-                </div>
+        @endforeach
+    @endif
+</div>
+               </div>
                         @push('scripts')
                         <script>
                             // Drag and drop handlers
