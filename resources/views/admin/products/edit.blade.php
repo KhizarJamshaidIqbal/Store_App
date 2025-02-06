@@ -207,7 +207,7 @@
                                         class="bg-white relative w-full border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-pointer focus:outline-none focus:ring-1 focus:ring-offset-2 focus:ring-blue-500"
                                         aria-haspopup="listbox"
                                         :aria-expanded="open">
-                                        <span x-text="selected === 'active' ? 'Active' : (selected === 'inactive' ? 'InActive' : (selected === 'archived' ? 'Archived' : 'Select status'))"
+                                        <span x-text="selected === 'active' ? 'Active' : (selected === 'inactive' ? 'InActive' : 'Select status')"
                                             class="block truncate capitalize"></span>
                                         <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                                             <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -240,16 +240,6 @@
                                             class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-blue-50">
                                             <span class="block truncate">InActive</span>
                                             <span x-show="selected === 'inactive'" class="absolute inset-y-0 right-0 flex items-center pr-4 text-blue-600">
-                                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                                </svg>
-                                            </span>
-                                        </div>
-                                        <div @click="selected = 'archived'; open = false"
-                                            :class="{ 'bg-blue-50 text-blue-900': selected === 'archived' }"
-                                            class="cursor-pointer select-none relative py-2 pl-3 pr-9 hover:bg-blue-50">
-                                            <span class="block truncate">Archived</span>
-                                            <span x-show="selected === 'archived'" class="absolute inset-y-0 right-0 flex items-center pr-4 text-blue-600">
                                                 <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                                                 </svg>
@@ -857,7 +847,52 @@
                         </button>
                     </div>
                 </div>
+                @push('scripts')
+                <script>
+                document.addEventListener('alpine:init', () => {
+                    Alpine.data('sortable', () => ({
+                        init() {
+                            new Sortable(this.$el, {
+                                animation: 150,
+                                ghostClass: 'opacity-50',
+                                onUpdate: (evt) => {
+                                    // Get all children and ensure IDs are parsed as integers
+                                    const order = Array.from(this.$el.children)
+                                        .map(item => {
+                                            const id = parseInt(item.dataset.id, 10);
+                                            if (isNaN(id)) {
+                                                console.error('Invalid ID:', item.dataset.id);
+                                                return null;
+                                            }
+                                            return id;
+                                        })
+                                        .filter(id => id !== null); // Remove any invalid IDs
 
+                                    // Debug log
+                                    console.log('Sending order:', order);
+
+                                    // Send the request
+                                    axios.post('{{ route("admin.products.images.reorder") }}', {
+                                        order: order
+                                    }, {
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'Accept': 'application/json'
+                                        }
+                                    }).then(response => {
+                                        if (!response.data.success) {
+                                            console.error('Reordering failed');
+                                        }
+                                    }).catch(error => {
+                                        console.error('Error:', error);
+                                    });
+                                }
+                            });
+                        }
+                    }));
+                });
+                </script>
+                @endpush
                 @push('scripts')
                 <script>
                     // Function to generate slug from text
@@ -1395,9 +1430,7 @@
                     <button type="button" onclick="window.location.href='{{ url('/admin/products') }}'" class="px-4 py-2 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         Cancel
                     </button>
-                    <button type="button" class="px-4 py-2 bg-gray-200 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        Save as Draft
-                    </button>
+
                     <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         Update Product
                     </button>
@@ -1406,6 +1439,7 @@
         </form>
     </div>
 </div>
+
 
 @push('scripts')
 <script>

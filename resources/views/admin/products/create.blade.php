@@ -676,7 +676,7 @@
                                          @dragstart="handleDragStart(index, $event)"
                                          @dragend="handleDragEnd($event)"
                                          @dragover.prevent="handleDragOver(index, $event)">
-                                        
+
                                         <!-- Image Preview -->
                                         <div class="aspect-w-3 aspect-h-2">
                                             <img :src="file.preview"

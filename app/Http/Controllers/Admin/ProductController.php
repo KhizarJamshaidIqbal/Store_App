@@ -363,6 +363,11 @@ class ProductController extends Controller
                     ]
                 ]);
             }
+            $product = Product::findOrFail($product->id);
+            // If status is active, ensure is_draft is false
+    if ($request->status === 'active') {
+        $request->merge(['is_draft' => false]);
+    }
 
             return redirect()->route('admin.products.index')
                 ->with('success', 'Product updated successfully!');
@@ -550,20 +555,49 @@ class ProductController extends Controller
     /**
      * Reorder product images
      */
-    public function reorderImages(Request $request)
-    {
-        $request->validate([
-            'order' => 'required|array',
-            'order.*' => 'exists:product_images,id'
-        ]);
+//     public function reorderImages(Request $request)
+// {
+//     $request->validate([
+//         'order' => 'required|array',
+//         'order.*' => 'integer|exists:product_images,id'
+//     ]);
 
-        foreach ($request->order as $index => $id) {
-            ProductImage::where('id', $id)->update(['sort_order' => $index + 1]);
+//     foreach ($request->order as $index => $imageId) {
+//         ProductImage::where('id', $imageId)->update(['sort_order' => $index + 1]);
+//     }
+
+//     return response()->json(['success' => true]);
+// }
+public function reorderImages(Request $request)
+{
+    $request->validate([
+        'order' => 'required|array',
+        'order.*' => 'integer|exists:product_images,id'
+    ]);
+
+    try {
+        DB::beginTransaction();
+
+        $caseStatements = [];
+        $sortOrder = 1;
+        $imageIds = $request->order;
+
+        foreach ($imageIds as $imageId) {
+            $caseStatements[] = "WHEN id = {$imageId} THEN {$sortOrder}";
+            $sortOrder++;
         }
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Images reordered successfully'
-        ]);
+        ProductImage::whereIn('id', $imageIds)
+            ->update([
+                'sort_order' => DB::raw("CASE " . implode(' ', $caseStatements) . " END")
+            ]);
+
+        DB::commit();
+
+        return response()->json(['success' => true]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json(['success' => false, 'message' => 'Failed to update sort order'], 500);
     }
+}
 }

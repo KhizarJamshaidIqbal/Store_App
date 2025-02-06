@@ -30,6 +30,7 @@ Route::prefix('admin')
         Route::resource('categories', CategoryController::class);
 
         // Products Routes
+
         Route::resource('products', ProductController::class);
         Route::post('products/{id}/restore', [ProductController::class, 'restore'])->name('products.restore');
         Route::delete('products/{id}/force-delete', [ProductController::class, 'forceDelete'])->name('products.force-delete');
