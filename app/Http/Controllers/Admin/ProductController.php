@@ -107,9 +107,7 @@ class ProductController extends Controller
 
         // Get products with their relationships
         $perPage = $request->get('per_page', 12);
-        $products = $query->with(['category', 'images' => function($query) {
-            $query->where('is_primary', true);
-        }])->paginate($perPage);
+        $products = $query->with(['category', 'images'])->paginate($perPage);
 
         // Append query parameters to pagination links
         $products->appends($request->except('page'));

@@ -1,5 +1,9 @@
 @extends('admin.layouts.app')
 
+@php
+    use Illuminate\Support\Facades\Storage;
+@endphp
+
 @section('content')
 <div class="p-8 bg-gray-50 min-h-screen">
     <!-- Statistics Cards -->
@@ -214,15 +218,17 @@
                  style="cursor: pointer">
                 <!-- Product Image -->
                 <div class="aspect-w-16 aspect-h-9 bg-gray-100">
-                    @if($product->primary_image_url)
-                        <img src="{{ $product->primary_image_url }}"
-                             alt="{{ $product->name }}"
-                             class="object-cover w-full h-full">
-                    @else
-                        <div class="flex items-center justify-center h-full bg-gray-100">
-                            <i class="fas fa-image text-gray-400 text-4xl"></i>
-                        </div>
-                    @endif
+                    @if($product->images->isNotEmpty())
+                    <img src="{{ asset('storage/' . $product->images->first()->image_path) }}"
+                         alt="{{ $product->name }}"
+                         class="object-cover w-full h-full rounded"
+                         loading="lazy"
+                         onerror="this.src='{{ asset('images/placeholder.png') }}'">
+                @else
+                    <div class="flex items-center justify-center h-full bg-gray-100 rounded">
+                        <i class="fas fa-image text-gray-400 text-4xl"></i>
+                    </div>
+                @endif
                 </div>
 
                 <!-- Product Details -->
@@ -258,16 +264,15 @@
                         <div class="flex space-x-2">
                             @if($product->trashed())
                                 <form action="{{ route('admin.products.restore', $product->id) }}"
-                                      method="POST"
-                                      class="inline-block">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit"
-                                            class="inline-flex items-center px-3 py-1 border border-transparent shadow-sm text-sm font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                                            title="Restore Product">
-                                        <i class="fas fa-trash-restore"></i>
-                                    </button>
-                                </form>
+                                    method="POST"
+                                    class="inline-block">
+                                  @csrf
+                                  <button type="submit"
+                                          class="inline-flex items-center px-3 py-1 border border-transparent shadow-sm text-sm font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                                          title="Restore Product">
+                                      <i class="fas fa-trash-restore"></i>
+                                  </button>
+                              </form>
                                 <form action="{{ route('admin.products.force-delete', $product->id) }}"
                                       method="POST"
                                       class="inline-block"
