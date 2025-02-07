@@ -326,7 +326,8 @@ class ProductController extends Controller
                 'package_width' => $validatedData['package_width'],
                 'package_height' => $validatedData['package_height'],
                 'dangerous_goods' => $validatedData['dangerous_goods'] ?? false,
-                'status' => $validatedData['status']
+                'status' => $validatedData['status'],
+                'is_draft' => $request->status === 'Draft' ? 1 : 0,
             ]);
 
             // Handle variants
@@ -366,7 +367,7 @@ class ProductController extends Controller
             $product = Product::findOrFail($product->id);
             // If status is active, ensure is_draft is false
     if ($request->status === 'active') {
-        $request->merge(['is_draft' => false]);
+        $request->merge(['is_draft' => 0]);
     }
 
             return redirect()->route('admin.products.index')
