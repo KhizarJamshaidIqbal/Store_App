@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class CategoryController extends Controller
 {
@@ -79,10 +80,19 @@ class CategoryController extends Controller
                 'parent_id' => 'nullable|exists:categories,id',
                 'description' => 'nullable|string',
                 'status' => 'boolean',
-                'sort_order' => 'integer|min:0'
+                'sort_order' => 'integer|min:0',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
             ]);
 
             $validated['slug'] = $this->generateUniqueSlug($validated['name']);
+
+            // Handle image upload
+            if ($request->hasFile('image')) {
+                $image = $request->file('image');
+                $imageName = time() . '_' . Str::slug($image->getClientOriginalName());
+                $image->move(public_path('storage/categories'), $imageName);
+                $validated['image'] = 'categories/' . $imageName;
+            }
 
             $category = Category::create($validated);
 
@@ -118,25 +128,24 @@ class CategoryController extends Controller
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'parent_id' => [
-                    'nullable',
-                    'exists:categories,id',
-                    function ($attribute, $value, $fail) use ($category) {
-                        if ($value == $category->id) {
-                            $fail('A category cannot be its own parent.');
-                        }
-                    },
-                ],
+                'parent_id' => 'nullable|exists:categories,id',
                 'description' => 'nullable|string',
                 'status' => 'boolean',
-                'sort_order' => 'integer|min:0'
+                'sort_order' => 'integer|min:0',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
             ]);
 
-            // Handle status explicitly
-            $validated['status'] = (bool) $request->input('status', false);
+            // Handle image upload
+            if ($request->hasFile('image')) {
+                // Delete old image if exists
+                if ($category->image && file_exists(public_path('storage/' . $category->image))) {
+                    unlink(public_path('storage/' . $category->image));
+                }
 
-            if ($request->filled('name') && $category->name !== $request->name) {
-                $validated['slug'] = $this->generateUniqueSlug($request->name, $category->id);
+                $image = $request->file('image');
+                $imageName = time() . '_' . Str::slug($image->getClientOriginalName());
+                $image->move(public_path('storage/categories'), $imageName);
+                $validated['image'] = 'categories/' . $imageName;
             }
 
             $category->update($validated);

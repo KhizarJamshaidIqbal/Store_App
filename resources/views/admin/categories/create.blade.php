@@ -21,7 +21,7 @@
             </div>
 
             <!-- Form -->
-            <form action="{{ route('admin.categories.store') }}" method="POST" class="p-6 space-y-6">
+            <form action="{{ route('admin.categories.store') }}" method="POST" class="p-6 space-y-6" enctype="multipart/form-data">
                 @csrf
                 
                 <!-- Category Name -->
@@ -41,6 +41,34 @@
                                placeholder="Enter category name">
                     </div>
                     @error('name')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <!-- Category Image -->
+                <div class="space-y-2">
+                    <label for="image" class="block text-sm font-medium text-gray-700">
+                        Category Image
+                    </label>
+                    <div class="mt-1 flex items-center">
+                        <div class="relative">
+                            <input type="file" 
+                                   name="image" 
+                                   id="image" 
+                                   accept="image/*"
+                                   class="block w-full text-sm text-gray-500
+                                          file:mr-4 file:py-2 file:px-4
+                                          file:rounded-full file:border-0
+                                          file:text-sm file:font-semibold
+                                          file:bg-blue-50 file:text-blue-700
+                                          hover:file:bg-blue-100
+                                          @error('image') border-red-500 @enderror">
+                            <div class="mt-2">
+                                <img id="image-preview" src="#" alt="Preview" class="hidden max-w-xs rounded-lg shadow-sm">
+                            </div>
+                        </div>
+                    </div>
+                    @error('image')
                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                     @enderror
                 </div>
@@ -154,4 +182,21 @@
         -moz-appearance: none;
     }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+    document.getElementById('image').addEventListener('change', function(e) {
+        const preview = document.getElementById('image-preview');
+        const file = e.target.files[0];
+        
+        if (file) {
+            preview.src = URL.createObjectURL(file);
+            preview.classList.remove('hidden');
+        } else {
+            preview.src = '#';
+            preview.classList.add('hidden');
+        }
+    });
+</script>
 @endpush

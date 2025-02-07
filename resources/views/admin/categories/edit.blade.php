@@ -24,7 +24,7 @@
                     </div>
 
                     <!-- Form -->
-                    <form action="{{ route('admin.categories.update', $category->id) }}" method="POST" class="p-6 space-y-6">
+                    <form action="{{ route('admin.categories.update', $category->id) }}" method="POST" class="p-6 space-y-6" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
                         
@@ -92,6 +92,54 @@
                                 </div>
                             </div>
                             @error('parent_id')
+                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <!-- Category Image -->
+                        <div class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-700">
+                                Category Image
+                            </label>
+                            <div class="mt-1 space-y-4">
+                                @if($category->image)
+                                <div class="current-image mb-4">
+                                    <p class="text-sm text-gray-500 mb-2">Current Image:</p>
+                                    <div class="relative w-48 h-48 border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
+                                        <img src="{{ asset('storage/' . $category->image) }}"
+                                             alt="{{ $category->name }}" 
+                                             class="w-full h-full object-contain"
+                                             onerror="this.src='{{ asset('images/placeholder.png') }}'; this.classList.add('opacity-50');">
+                                    </div>
+                                </div>
+                                @endif
+                                
+                                <div class="flex flex-col space-y-2">
+                                    <div class="flex items-center">
+                                        <label for="image" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:text-gray-500 focus:outline-none focus:border-blue-400 focus:shadow-outline-blue active:text-gray-800 active:bg-gray-50 transition ease-in-out duration-150 cursor-pointer">
+                                            Choose File
+                                            <input type="file" 
+                                                   name="image" 
+                                                   id="image" 
+                                                   accept="image/*"
+                                                   class="hidden"
+                                                   onchange="updateFileName(this)">
+                                        </label>
+                                        <span class="ml-3 text-sm text-gray-500" id="selected-file">No file chosen</span>
+                                    </div>
+                                    
+                                    <div class="mt-2">
+                                        <div class="relative w-48 h-48 border border-gray-200 rounded-lg overflow-hidden bg-gray-50 hidden" id="preview-container">
+                                            <img id="image-preview" src="#" alt="Preview" class="w-full h-full object-contain">
+                                        </div>
+                                    </div>
+                                    
+                                    <p class="text-sm text-gray-500 mt-2">
+                                        Upload a new image to replace the current one. Leave empty to keep the current image.
+                                    </p>
+                                </div>
+                            </div>
+                            @error('image')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                             @enderror
                         </div>
@@ -217,4 +265,29 @@
         -moz-appearance: none;
     }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+    function updateFileName(input) {
+        const fileName = input.files[0]?.name || 'No file chosen';
+        document.getElementById('selected-file').textContent = fileName;
+        
+        // Handle preview
+        const preview = document.getElementById('image-preview');
+        const previewContainer = document.getElementById('preview-container');
+        
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                previewContainer.classList.remove('hidden');
+            }
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            preview.src = '#';
+            previewContainer.classList.add('hidden');
+        }
+    }
+</script>
 @endpush
