@@ -555,49 +555,26 @@ class ProductController extends Controller
     /**
      * Reorder product images
      */
-//     public function reorderImages(Request $request)
-// {
-//     $request->validate([
-//         'order' => 'required|array',
-//         'order.*' => 'integer|exists:product_images,id'
-//     ]);
+    public function reorderImages(Request $request)
+    {
+        $request->validate([
+            'order' => 'required|array',
+            'order.*' => 'required|integer|exists:product_images,id'
+        ]);
 
-//     foreach ($request->order as $index => $imageId) {
-//         ProductImage::where('id', $imageId)->update(['sort_order' => $index + 1]);
-//     }
+        try {
+            DB::beginTransaction();
 
-//     return response()->json(['success' => true]);
-// }
-public function reorderImages(Request $request)
-{
-    $request->validate([
-        'order' => 'required|array',
-        'order.*' => 'integer|exists:product_images,id'
-    ]);
+            foreach ($request->order as $index => $imageId) {
+                ProductImage::where('id', $imageId)->update(['sort_order' => $index + 1]);
+            }
 
-    try {
-        DB::beginTransaction();
+            DB::commit();
 
-        $caseStatements = [];
-        $sortOrder = 1;
-        $imageIds = $request->order;
-
-        foreach ($imageIds as $imageId) {
-            $caseStatements[] = "WHEN id = {$imageId} THEN {$sortOrder}";
-            $sortOrder++;
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Failed to update sort order'], 500);
         }
-
-        ProductImage::whereIn('id', $imageIds)
-            ->update([
-                'sort_order' => DB::raw("CASE " . implode(' ', $caseStatements) . " END")
-            ]);
-
-        DB::commit();
-
-        return response()->json(['success' => true]);
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return response()->json(['success' => false, 'message' => 'Failed to update sort order'], 500);
     }
-}
 }
