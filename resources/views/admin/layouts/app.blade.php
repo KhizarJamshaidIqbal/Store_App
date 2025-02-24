@@ -192,6 +192,222 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Media Library -->
+                        <div x-data="{ isOpen: false }" class="relative">
+                            <a @click="isOpen = !isOpen" @click.away="isOpen = false"
+                               class="group flex items-center px-4 py-3 text-gray-100 rounded-lg transition-all duration-300 ease-in-out transform hover:translate-x-2
+                                      {{ request()->routeIs('admin.media.*') ? 'bg-white/10 shadow-lg scale-[1.02]' : 'hover:bg-white/5' }}">
+                                <i class="fa fa-images w-5 h-5 mr-4 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12
+                                   {{ request()->routeIs('admin.media.*') ? 'text-blue-200' : '' }}"></i>
+                                <span class="font-medium transition-all duration-300 group-hover:text-blue-200
+                                           {{ request()->routeIs('admin.media.*') ? 'text-blue-200' : '' }}">Media Library</span>
+                            </a>
+
+                            <!-- Dropdown Menu -->
+                            <div x-show="isOpen"
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="opacity-0 transform -translate-y-2"
+                                 x-transition:enter-end="opacity-100 transform translate-y-0"
+                                 x-transition:leave="transition ease-in duration-150"
+                                 x-transition:leave-start="opacity-100 transform translate-y-0"
+                                 x-transition:leave-end="opacity-0 transform -translate-y-2"
+                                 class="relative left-0 mt-2 w-full bg-white/10 backdrop-blur-xl rounded-lg overflow-hidden z-50">
+                                <div class="py-2 space-y-1">
+                                    <a href="{{ route('admin.media.index') }}"
+                                       class="block px-4 py-2 text-sm text-gray-100 hover:bg-white/10 transition-colors duration-200
+                                              {{ request()->routeIs('admin.media.index') ? 'bg-white/20' : '' }}">
+                                        <i class="fas fa-list-ul mr-2"></i> All Media
+                                    </a>
+                                    <a href="{{ route('admin.media.create') }}"
+                                       class="block px-4 py-2 text-sm text-gray-100 hover:bg-white/10 transition-colors duration-200
+                                              {{ request()->routeIs('admin.media.create') ? 'bg-white/20' : '' }}">
+                                        <i class="fas fa-plus mr-2"></i> Add Media
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Banners -->
+                        <div x-data="{ isOpen: false }" class="relative">
+                            <a @click="isOpen = !isOpen" @click.away="isOpen = false"
+                               class="group flex items-center px-4 py-3 text-gray-100 rounded-lg transition-all duration-300 ease-in-out transform hover:translate-x-2
+                                      {{ request()->routeIs('admin.banners.*') ? 'bg-white/10 shadow-lg scale-[1.02]' : 'hover:bg-white/5' }}">
+                                <i class="fa fa-images w-5 h-5 mr-4 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12
+                                   {{ request()->routeIs('admin.banners.*') ? 'text-blue-200' : '' }}"></i>
+                                <span class="flex-1">Banners</span>
+                                <i class="fas fa-chevron-down transition-transform duration-300"
+                                   :class="{'rotate-180': isOpen}"></i>
+                            </a>
+
+                            <!-- Dropdown Menu -->
+                            <div x-show="isOpen"
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="opacity-0 transform -translate-y-2"
+                                 x-transition:enter-end="opacity-100 transform translate-y-0"
+                                 x-transition:leave="transition ease-in duration-150"
+                                 x-transition:leave-start="opacity-100 transform translate-y-0"
+                                 x-transition:leave-end="opacity-0 transform -translate-y-2"
+                                 class="relative left-0 mt-2 w-full bg-white/10 backdrop-blur-xl rounded-lg overflow-hidden z-50">
+                                <div class="py-2 space-y-1">
+                                    <a href="{{ route('admin.banners.index') }}"
+                                       class="block px-4 py-2 text-sm text-gray-100 hover:bg-white/10 transition-colors duration-200
+                                              {{ request()->routeIs('admin.banners.index') ? 'bg-white/20' : '' }}">
+                                        <i class="fas fa-list-ul mr-2"></i> All Banners
+                                    </a>
+                                    <a href="{{ route('admin.banners.create') }}"
+                                       class="block px-4 py-2 text-sm text-gray-100 hover:bg-white/10 transition-colors duration-200
+                                              {{ request()->routeIs('admin.banners.create') ? 'bg-white/20' : '' }}">
+                                        <i class="fas fa-plus mr-2"></i> Add Banner
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pages -->
+                        <div x-data="{ isOpen: false }" class="relative">
+                            <a @click="isOpen = !isOpen" @click.away="isOpen = false"
+                               class="group flex items-center px-4 py-3 text-gray-100 rounded-lg transition-all duration-300 ease-in-out transform hover:translate-x-2
+                                      {{ request()->routeIs('admin.pages.*') ? 'bg-white/10 shadow-lg scale-[1.02]' : 'hover:bg-white/5' }}">
+                                <i class="fa fa-file-lines w-5 h-5 mr-4 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12
+                                   {{ request()->routeIs('admin.pages.*') ? 'text-blue-200' : '' }}"></i>
+                                <span class="flex-1">Pages</span>
+                                <i class="fas fa-chevron-down transition-transform duration-300"
+                                   :class="{'rotate-180': isOpen}"></i>
+                            </a>
+
+                            <!-- Dropdown Menu -->
+                            <div x-show="isOpen"
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="opacity-0 transform -translate-y-2"
+                                 x-transition:enter-end="opacity-100 transform translate-y-0"
+                                 x-transition:leave="transition ease-in duration-150"
+                                 x-transition:leave-start="opacity-100 transform translate-y-0"
+                                 x-transition:leave-end="opacity-0 transform -translate-y-2"
+                                 class="relative left-0 mt-2 w-full bg-white/10 backdrop-blur-xl rounded-lg overflow-hidden z-50">
+                                <div class="py-2 space-y-1">
+                                    <a href="{{ route('admin.pages.index') }}"
+                                       class="block px-4 py-2 text-sm text-gray-100 hover:bg-white/10 transition-colors duration-200
+                                              {{ request()->routeIs('admin.pages.index') ? 'bg-white/20' : '' }}">
+                                        <i class="fas fa-list-ul mr-2"></i> All Pages
+                                    </a>
+                                    <a href="{{ route('admin.pages.create') }}"
+                                       class="block px-4 py-2 text-sm text-gray-100 hover:bg-white/10 transition-colors duration-200
+                                              {{ request()->routeIs('admin.pages.create') ? 'bg-white/20' : '' }}">
+                                        <i class="fas fa-plus mr-2"></i> Add Page
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Special Offers -->
+                        <div x-data="{ isOpen: false }" class="relative">
+                            <a @click="isOpen = !isOpen" @click.away="isOpen = false"
+                               class="group flex items-center px-4 py-3 text-gray-100 rounded-lg transition-all duration-300 ease-in-out transform hover:translate-x-2
+                                      {{ request()->routeIs('admin.special-offers.*') ? 'bg-white/10 shadow-lg scale-[1.02]' : 'hover:bg-white/5' }}">
+                                <i class="fa fa-gift w-5 h-5 mr-4 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12
+                                   {{ request()->routeIs('admin.special-offers.*') ? 'text-blue-200' : '' }}"></i>
+                                <span class="flex-1">Special Offers</span>
+                                <i class="fas fa-chevron-down transition-transform duration-300"
+                                   :class="{'rotate-180': isOpen}"></i>
+                            </a>
+
+                            <!-- Dropdown Menu -->
+                            <div x-show="isOpen"
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="opacity-0 transform -translate-y-2"
+                                 x-transition:enter-end="opacity-100 transform translate-y-0"
+                                 x-transition:leave="transition ease-in duration-150"
+                                 x-transition:leave-start="opacity-100 transform translate-y-0"
+                                 x-transition:leave-end="opacity-0 transform -translate-y-2"
+                                 class="relative left-0 mt-2 w-full bg-white/10 backdrop-blur-xl rounded-lg overflow-hidden z-50">
+                                <div class="py-2 space-y-1">
+                                    <a href="{{ route('admin.special-offers.index') }}"
+                                       class="block px-4 py-2 text-sm text-gray-100 hover:bg-white/10 transition-colors duration-200
+                                              {{ request()->routeIs('admin.special-offers.index') ? 'bg-white/20' : '' }}">
+                                        <i class="fas fa-list-ul mr-2"></i> All Offers
+                                    </a>
+                                    <a href="{{ route('admin.special-offers.create') }}"
+                                       class="block px-4 py-2 text-sm text-gray-100 hover:bg-white/10 transition-colors duration-200
+                                              {{ request()->routeIs('admin.special-offers.create') ? 'bg-white/20' : '' }}">
+                                        <i class="fas fa-plus mr-2"></i> Add New Offer
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recommended Products -->
+                        <div x-data="{ isOpen: false }" class="relative">
+                            <a @click="isOpen = !isOpen" @click.away="isOpen = false"
+                               class="group flex items-center px-4 py-3 text-gray-100 rounded-lg transition-all duration-300 ease-in-out transform hover:translate-x-2
+                                      {{ request()->routeIs('admin.recommended-products.*') ? 'bg-white/10 shadow-lg scale-[1.02]' : 'hover:bg-white/5' }}">
+                                <i class="fa fa-star w-5 h-5 mr-4 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12
+                                   {{ request()->routeIs('admin.recommended-products.*') ? 'text-blue-200' : '' }}"></i>
+                                <span class="flex-1">Recommended Products</span>
+                                <i class="fas fa-chevron-down transition-transform duration-300"
+                                   :class="{'rotate-180': isOpen}"></i>
+                            </a>
+
+                            <!-- Dropdown Menu -->
+                            <div x-show="isOpen"
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="opacity-0 transform -translate-y-2"
+                                 x-transition:enter-end="opacity-100 transform translate-y-0"
+                                 x-transition:leave="transition ease-in duration-150"
+                                 x-transition:leave-start="opacity-100 transform translate-y-0"
+                                 x-transition:leave-end="opacity-0 transform -translate-y-2"
+                                 class="relative left-0 mt-2 w-full bg-white/10 backdrop-blur-xl rounded-lg overflow-hidden z-50">
+                                <div class="py-2 space-y-1">
+                                    <a href="{{ route('admin.recommended-products.index') }}"
+                                       class="block px-4 py-2 text-sm text-gray-100 hover:bg-white/10 transition-colors duration-200
+                                              {{ request()->routeIs('admin.recommended-products.index') ? 'bg-white/20' : '' }}">
+                                        <i class="fas fa-list-ul mr-2"></i> All Recommendations
+                                    </a>
+                                    <a href="{{ route('admin.recommended-products.create') }}"
+                                       class="block px-4 py-2 text-sm text-gray-100 hover:bg-white/10 transition-colors duration-200
+                                              {{ request()->routeIs('admin.recommended-products.create') ? 'bg-white/20' : '' }}">
+                                        <i class="fas fa-plus mr-2"></i> Add Recommendation
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Popular Products -->
+                        <div x-data="{ isOpen: false }" class="relative">
+                            <a @click="isOpen = !isOpen" @click.away="isOpen = false"
+                               class="group flex items-center px-4 py-3 text-gray-100 rounded-lg transition-all duration-300 ease-in-out transform hover:translate-x-2
+                                      {{ request()->routeIs('admin.popular-products.*') ? 'bg-white/10 shadow-lg scale-[1.02]' : 'hover:bg-white/5' }}">
+                                <i class="fa fa-fire w-5 h-5 mr-4 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12
+                                   {{ request()->routeIs('admin.popular-products.*') ? 'text-blue-200' : '' }}"></i>
+                                <span class="flex-1">Popular Products</span>
+                                <i class="fas fa-chevron-down transition-transform duration-300"
+                                   :class="{'rotate-180': isOpen}"></i>
+                            </a>
+
+                            <!-- Dropdown Menu -->
+                            <div x-show="isOpen"
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="opacity-0 transform -translate-y-2"
+                                 x-transition:enter-end="opacity-100 transform translate-y-0"
+                                 x-transition:leave="transition ease-in duration-150"
+                                 x-transition:leave-start="opacity-100 transform translate-y-0"
+                                 x-transition:leave-end="opacity-0 transform -translate-y-2"
+                                 class="relative left-0 mt-2 w-full bg-white/10 backdrop-blur-xl rounded-lg overflow-hidden z-50">
+                                <div class="py-2 space-y-1">
+                                    <a href="{{ route('admin.popular-products.index') }}"
+                                       class="block px-4 py-2 text-sm text-gray-100 hover:bg-white/10 transition-colors duration-200
+                                              {{ request()->routeIs('admin.popular-products.index') ? 'bg-white/20' : '' }}">
+                                        <i class="fas fa-list-ul mr-2"></i> All Popular Products
+                                    </a>
+                                    <a href="{{ route('admin.popular-products.create') }}"
+                                       class="block px-4 py-2 text-sm text-gray-100 hover:bg-white/10 transition-colors duration-200
+                                              {{ request()->routeIs('admin.popular-products.create') ? 'bg-white/20' : '' }}">
+                                        <i class="fas fa-plus mr-2"></i> Add Popular Product
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
                     <!-- Animated Indicator -->
