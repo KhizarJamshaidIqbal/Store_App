@@ -408,6 +408,16 @@
                             </div>
                         </div>
 
+                        <!-- API Documentation -->
+                        <a href="{{ route('admin.api-documentation.index') }}"
+                           class="group flex items-center px-4 py-3 text-gray-100 rounded-lg transition-all duration-300 ease-in-out transform hover:translate-x-2
+                                  {{ request()->routeIs('admin.api-documentation.*') ? 'bg-white/10 shadow-lg scale-[1.02]' : 'hover:bg-white/5' }}">
+                            <i class="fa fa-book-open w-5 h-5 mr-4 transition-all duration-300 group-hover:scale-110 group-hover:rotate-12
+                               {{ request()->routeIs('admin.api-documentation.*') ? 'text-blue-200' : '' }}"></i>
+                            <span class="font-medium transition-all duration-300 group-hover:text-blue-200
+                                       {{ request()->routeIs('admin.api-documentation.*') ? 'text-blue-200' : '' }}">API Documentation</span>
+                        </a>
+
                     </div>
 
                     <!-- Animated Indicator -->

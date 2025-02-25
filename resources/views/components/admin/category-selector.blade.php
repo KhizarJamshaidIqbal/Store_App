@@ -17,14 +17,14 @@
     secondFilter: '',
     thirdFilter: '',
     fourthFilter: '',
-    
+
     init() {
         this.firstColumn = this.categories.filter(cat => !cat.parent_id);
     },
 
     getFilteredCategories(list, searchTerm = '') {
         if (!list) return [];
-        return searchTerm 
+        return searchTerm
             ? list.filter(cat => cat.name.toLowerCase().includes(searchTerm.toLowerCase()))
             : list;
     },
@@ -84,21 +84,21 @@
                @click="isOpen = true"
                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
                placeholder="Select category">
-        
+
         <input type="hidden" name="category_id" x-ref="categoryId">
     </div>
 
     <!-- Dropdown -->
-    <div x-show="isOpen" 
+    <div x-show="isOpen"
          @click.away="isOpen = false"
          class="absolute z-10 mt-1 w-[800px] bg-white shadow-lg rounded-md py-1 text-base ring-1 ring-black ring-opacity-5">
-        
+
         <!-- Category Grid -->
         <div class="grid grid-cols-4 gap-0 divide-x h-[400px]">
             <!-- First Column -->
             <div class="p-2">
                 <div class="relative mb-2">
-                    <input type="text" 
+                    <input type="text"
                            placeholder="Filter..."
                            class="w-full pl-8 pr-4 py-1 text-sm border-gray-300 rounded-md"
                            x-model="firstFilter">
@@ -125,7 +125,7 @@
             <!-- Second Column -->
             <div class="p-2">
                 <div class="relative mb-2">
-                    <input type="text" 
+                    <input type="text"
                            placeholder="Filter..."
                            class="w-full pl-8 pr-4 py-1 text-sm border-gray-300 rounded-md"
                            x-model="secondFilter">
@@ -152,7 +152,7 @@
             <!-- Third Column -->
             <div class="p-2">
                 <div class="relative mb-2">
-                    <input type="text" 
+                    <input type="text"
                            placeholder="Filter..."
                            class="w-full pl-8 pr-4 py-1 text-sm border-gray-300 rounded-md"
                            x-model="thirdFilter">
@@ -179,7 +179,7 @@
             <!-- Fourth Column -->
             <div class="p-2">
                 <div class="relative mb-2">
-                    <input type="text" 
+                    <input type="text"
                            placeholder="Filter..."
                            class="w-full pl-8 pr-4 py-1 text-sm border-gray-300 rounded-md"
                            x-model="fourthFilter">
@@ -205,7 +205,7 @@
         <template x-if="selectedPath.length > 0">
             <div class="px-4 py-2 bg-gray-50 border-t">
                 <div class="text-sm text-gray-600">
-                    Current selection: 
+                    Current selection:
                     <span class="text-orange-500" x-text="selectedPath.map(c => c.name).join(' > ')"></span>
                 </div>
             </div>
@@ -213,12 +213,12 @@
 
         <!-- Footer -->
         <div class="px-4 py-3 bg-gray-50 border-t flex justify-end space-x-2">
-            <button type="button" 
+            <button type="button"
                     @click="isOpen = false"
                     class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                 Cancel
             </button>
-            <button type="button" 
+            <button type="button"
                     @click="isOpen = false"
                     x-bind:disabled="!selectedPath.length"
                     :class="{'opacity-50 cursor-not-allowed': !selectedPath.length}"

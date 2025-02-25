@@ -74,36 +74,30 @@ class CategoryController extends Controller
 
     public function store(Request $request)
     {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'parent_id' => 'nullable|exists:categories,id',
+            'description' => 'nullable|string',
+            'image' => 'nullable|string',
+            'status' => 'boolean'
+        ]);
+
         try {
-            $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'parent_id' => 'nullable|exists:categories,id',
-                'description' => 'nullable|string',
-                'status' => 'boolean',
-                'sort_order' => 'integer|min:0',
-                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            $category = Category::create([
+                'name' => $validated['name'],
+                'parent_id' => $validated['parent_id'],
+                'description' => $validated['description'],
+                'image' => $validated['image'] ?? null,
+                'status' => $validated['status'] ?? true
             ]);
-
-            $validated['slug'] = $this->generateUniqueSlug($validated['name']);
-
-            // Handle image upload
-            if ($request->hasFile('image')) {
-                $image = $request->file('image');
-                $imageName = time() . '_' . Str::slug($image->getClientOriginalName());
-                $image->move(public_path('storage/categories'), $imageName);
-                $validated['image'] = 'categories/' . $imageName;
-            }
-
-            $category = Category::create($validated);
 
             return redirect()
                 ->route('admin.categories.index')
-                ->with('success', 'Category created successfully.');
+                ->with('success', 'Category created successfully');
         } catch (\Exception $e) {
-            Log::error('Category Store Error: ' . $e->getMessage());
             return back()
                 ->withInput()
-                ->with('error', 'Error creating category: ' . $e->getMessage());
+                ->with('error', 'Failed to create category. ' . $e->getMessage());
         }
     }
 
@@ -131,30 +125,21 @@ class CategoryController extends Controller
                 'parent_id' => 'nullable|exists:categories,id',
                 'description' => 'nullable|string',
                 'status' => 'boolean',
-                'sort_order' => 'integer|min:0',
-                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+                'image' => 'nullable|string'
             ]);
 
-            // Handle image upload
-            if ($request->hasFile('image')) {
-                // Delete old image if exists
-                if ($category->image && file_exists(public_path('storage/' . $category->image))) {
-                    unlink(public_path('storage/' . $category->image));
-                }
-
-                $image = $request->file('image');
-                $imageName = time() . '_' . Str::slug($image->getClientOriginalName());
-                $image->move(public_path('storage/categories'), $imageName);
-                $validated['image'] = 'categories/' . $imageName;
-            }
-
-            $category->update($validated);
+            $category->update([
+                'name' => $validated['name'],
+                'parent_id' => $validated['parent_id'],
+                'description' => $validated['description'],
+                'image' => $validated['image'] ?? $category->image,
+                'status' => $validated['status'] ?? true
+            ]);
 
             return redirect()
                 ->route('admin.categories.index')
                 ->with('success', 'Category updated successfully.');
         } catch (\Exception $e) {
-            Log::error('Category Update Error: ' . $e->getMessage());
             return back()
                 ->withInput()
                 ->with('error', 'Error updating category: ' . $e->getMessage());

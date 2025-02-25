@@ -1,7 +1,66 @@
 @extends('admin.layouts.app')
 
 @section('content')
-<div class="min-h-screen bg-gray-50 py-6">
+<div class="min-h-screen bg-gray-50 py-6" x-data="{
+    showMediaModal: false,
+    selectedMedia: [],
+    previews: [],
+    searchQuery: '',
+    filterType: 'all',
+    view: 'grid',
+    files: [],
+    uploadError: null,
+
+    selectMedia(path, url) {
+        if (!this.selectedMedia.includes(path)) {
+            this.selectedMedia.push(path);
+            this.previews.push(url);
+        }
+    },
+
+    removeMedia(index) {
+        this.selectedMedia.splice(index, 1);
+        this.previews.splice(index, 1);
+    },
+
+    clearSelection() {
+        this.selectedMedia = [];
+        this.previews = [];
+    },
+
+    handleFiles(event) {
+        let newFiles = Array.from(event.target.files || event.dataTransfer.files);
+        this.validateFiles(newFiles);
+    },
+
+    validateFiles(newFiles) {
+        this.uploadError = null;
+        const validFiles = newFiles.filter(file => {
+            if (!file.type.startsWith('image/')) {
+                this.uploadError = 'Please upload only image files (PNG, JPG, GIF).';
+                return false;
+            }
+            if (file.size > 10 * 1024 * 1024) {
+                this.uploadError = 'Image size should not exceed 10MB.';
+                return false;
+            }
+            return true;
+        });
+        if (validFiles.length) {
+            validFiles.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.files.push({
+                        file: file,
+                        preview: e.target.result,
+                        name: file.name
+                    });
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+    }
+}">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Header -->
         <div class="md:flex md:items-center md:justify-between mb-8">
@@ -102,7 +161,6 @@
                                 />
                             </div>
                         </div>
-
                         <div class="sm:col-span-6">
                             <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
                             <p class="mt-1 text-sm text-gray-500">Brief description of the product.</p>
@@ -452,43 +510,6 @@
 
                         <div class="sm:col-span-6">
                             <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4"
-                                x-data="{ enabled: {{ old('dangerous_goods', 0) ? 'true' : 'false' }} }">
-                                <div class="flex items-center justify-between">
-                                    <label for="dangerous_goods" class="flex-grow block text-sm font-medium text-gray-700">Dangerous Goods</label>
-                                    <button type="button"
-                                        @click="enabled = !enabled"
-                                        :class="enabled ? 'bg-blue-600' : 'bg-gray-200'"
-                                        class="relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                                        role="switch"
-                                        :aria-checked="enabled">
-                                        <span
-                                            :class="enabled ? 'translate-x-5' : 'translate-x-0'"
-                                            class="pointer-events-none relative inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200">
-                                            <span
-                                                :class="enabled ? 'opacity-0 ease-out duration-100' : 'opacity-100 ease-in duration-200'"
-                                                class="absolute inset-0 h-full w-full flex items-center justify-center transition-opacity"
-                                                aria-hidden="true">
-                                                <svg class="h-3 w-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 12 12">
-                                                    <path d="M4 8l2-2m0 0l2-2M6 6L4 4m2 2l2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                                </svg>
-                                            </span>
-                                            <span
-                                                :class="enabled ? 'opacity-100 ease-in duration-200' : 'opacity-0 ease-out duration-100'"
-                                                class="absolute inset-0 h-full w-full flex items-center justify-center transition-opacity"
-                                                aria-hidden="true">
-                                                <svg class="h-3 w-3 text-blue-600" fill="currentColor" viewBox="0 0 12 12">
-                                                    <path d="M3.707 5.293a1 1 0 00-1.414-1.414l1.414-1.414a1 1 0 001.414 1.414l-1.414 1.414a1 1 0 01-1.414 1.414l-1.414-1.414a1 1 0 00-1.414 1.414l1.414 1.414a1 1 0 001.414 1.414l1.414-1.414a1 1 0 001.414-1.414l-1.414-1.414a1 1 0 00-1.414-1.414z" />
-                                                </svg>
-                                            </span>
-                                        </span>
-                                    </button>
-                                </div>
-                                <input type="hidden" name="dangerous_goods" :value="enabled ? '1' : '0'">
-                            </div>
-                        </div>
-
-                        <div class="sm:col-span-6">
-                            <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4"
                                 x-data="{ open: false, selected: '{{ old('status', 'active') }}' }">
                                 <div class="flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
                                     <label for="status" class="block text-sm font-medium text-gray-700">Status <span class="text-red-500">*</span></label>
@@ -570,157 +591,116 @@
                                 <p class="text-sm text-gray-500">Upload and manage product images. First image will be used as the primary image.</p>
                             </div>
                         </div>
-                        <div x-show="files.length > 0" class="text-sm font-medium text-blue-600">
-                            <span x-text="files.length"></span> Images
+                    </div>
+
+                    <!-- Hidden input to store selected media paths -->
+                    <input type="hidden" name="images" x-model="JSON.stringify(selectedMedia)">
+
+                    <!-- Error Message -->
+                    <div x-show="uploadError" x-text="uploadError" class="text-red-600 text-sm"></div>
+
+                    <!-- Empty State Upload Area -->
+                    <div x-show="files.length === 0 && previews.length === 0"
+                         class="border-2 border-dashed border-gray-300 rounded-lg bg-white hover:border-blue-500 transition-colors duration-200"
+                         @drop.prevent="handleFiles($event)"
+                         @dragover.prevent="$event.target.classList.add('border-blue-500')"
+                         @dragleave.prevent="$event.target.classList.remove('border-blue-500')">
+                        <div class="p-12 text-center">
+                            <input type="file"
+                                   name="images[]"
+                                   id="product-images"
+                                   multiple
+                                   accept="image/*"
+                                   class="hidden"
+                                   @change="handleFiles($event)">
+
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+
+                            <div class="mt-4">
+                                <label for="product-images" class="cursor-pointer">
+                                    <span class="mt-2 block text-sm font-medium text-blue-600">
+                                        Add Images
+                                    </span>
+                                    <span class="mt-1 block text-xs text-gray-500">
+                                        or drag and drop
+                                    </span>
+                                </label>
+                                <p class="mt-1 text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                            </div>
+
+                            <!-- Media Library Button -->
+                            <button type="button"
+                                    @click.prevent.stop="showMediaModal = true"
+                                    class="mt-4 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                                <i class="fas fa-photo-film mr-2"></i>
+                                Choose from Media Library
+                            </button>
                         </div>
                     </div>
 
-                    <div x-data="{
-                        files: [],
-                        uploadError: null,
-                        draggedItem: null,
-                        handleFiles(event) {
-                            let newFiles = Array.from(event.target.files || event.dataTransfer.files);
-                            this.validateFiles(newFiles);
-                        },
-                        validateFiles(newFiles) {
-                            this.uploadError = null;
-                            const validFiles = newFiles.filter(file => {
-                                if (!file.type.startsWith('image/')) {
-                                    this.uploadError = 'Please upload only image files (PNG, JPG, GIF).';
-                                    return false;
-                                }
-                                if (file.size > 10 * 1024 * 1024) {
-                                    this.uploadError = 'Image size should not exceed 10MB.';
-                                    return false;
-                                }
-                                return true;
-                            });
-                            if (validFiles.length) {
-                                validFiles.forEach(file => {
-                                    const reader = new FileReader();
-                                    reader.onload = (e) => {
-                                        this.files.push({
-                                            file: file,
-                                            preview: e.target.result,
-                                            name: file.name
-                                        });
-                                    };
-                                    reader.readAsDataURL(file);
-                                });
-                            }
-                        },
-                        removeFile(index) {
-                            this.files.splice(index, 1);
-                        },
-                        handleDragStart(index, event) {
-                            this.draggedItem = index;
-                            event.target.classList.add('opacity-50');
-                        },
-                        handleDragEnd(event) {
-                            event.target.classList.remove('opacity-50');
-                        },
-                        handleDragOver(index, event) {
-                            event.preventDefault();
-                            if (index !== this.draggedItem) {
-                                const item = this.files[this.draggedItem];
-                                this.files.splice(this.draggedItem, 1);
-                                this.files.splice(index, 0, item);
-                                this.draggedItem = index;
-                            }
-                        }
-                    }"
-                    class="space-y-4">
-                        <!-- Error Message -->
-                        <div x-show="uploadError" x-text="uploadError" class="text-red-600 text-sm"></div>
+                    <!-- Image Grid -->
+                    <div x-show="files.length > 0 || previews.length > 0" class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <!-- File Upload Previews -->
+                            <template x-for="(file, index) in files" :key="index">
+                                <div class="relative bg-white rounded-lg shadow-sm overflow-hidden">
+                                    <div class="aspect-w-3 aspect-h-2">
+                                        <img :src="file.preview" :alt="file.name" class="object-cover w-full h-full">
+                                    </div>
+                                    <div x-show="index === 0" class="absolute top-2 left-2 px-2 py-1 bg-blue-500 text-white text-xs font-medium rounded-full">
+                                        Primary
+                                    </div>
+                                    <button @click="files.splice(index, 1)" class="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow-lg hover:bg-gray-100">
+                                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </template>
 
-                        <!-- Empty State Upload Area -->
-                        <div x-show="files.length === 0"
-                             class="border-2 border-dashed border-gray-300 rounded-lg bg-white hover:border-blue-500 transition-colors duration-200"
-                             @drop.prevent="handleFiles($event)"
-                             @dragover.prevent="$event.target.classList.add('border-blue-500')"
-                             @dragleave.prevent="$event.target.classList.remove('border-blue-500')">
-                            <div class="p-12 text-center">
+                            <!-- Media Library Previews -->
+                            <template x-for="(preview, index) in previews" :key="'media-'+index">
+                                <div class="relative bg-white rounded-lg shadow-sm overflow-hidden">
+                                    <div class="aspect-w-3 aspect-h-2">
+                                        <img :src="preview" class="object-cover w-full h-full">
+                                    </div>
+                                    <div x-show="index === 0 && files.length === 0" class="absolute top-2 left-2 px-2 py-1 bg-blue-500 text-white text-xs font-medium rounded-full">
+                                        Primary
+                                    </div>
+                                    <button @click="removeMedia(index)" class="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow-lg hover:bg-gray-100">
+                                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </template>
+
+                            <!-- Add More Button -->
+                            <div class="relative">
                                 <input type="file"
                                        name="images[]"
-                                       id="product-images"
                                        multiple
                                        accept="image/*"
                                        class="hidden"
-                                       @change="handleFiles($event)">
-
-                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                </svg>
-
-                                <div class="mt-4">
-                                    <label for="product-images" class="cursor-pointer">
-                                        <span class="mt-2 block text-sm font-medium text-blue-600">
-                                            Add More Images
-                                        </span>
-                                        <span class="mt-1 block text-xs text-gray-500">
-                                            or drag and drop
-                                        </span>
-                                    </label>
-                                    <p class="mt-1 text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Image Grid -->
-                        <div x-show="files.length > 0" class="space-y-4">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <template x-for="(file, index) in files" :key="index">
-                                    <div class="relative bg-white rounded-lg shadow-sm overflow-hidden"
-                                         draggable="true"
-                                         @dragstart="handleDragStart(index, $event)"
-                                         @dragend="handleDragEnd($event)"
-                                         @dragover.prevent="handleDragOver(index, $event)">
-
-                                        <!-- Image Preview -->
-                                        <div class="aspect-w-3 aspect-h-2">
-                                            <img :src="file.preview"
-                                                 :alt="file.name"
-                                                 class="object-contain w-full h-full">
-                                        </div>
-
-                                        <!-- Remove Button -->
-                                        <button @click.prevent="removeFile(index)"
-                                                type="button"
-                                                class="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow-lg hover:bg-gray-100 focus:outline-none">
-                                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                            </svg>
-                                        </button>
-
-                                        <!-- Image Info -->
-                                        <div class="p-3 bg-white">
-                                            <div class="flex items-center justify-between">
-                                                <span class="text-sm font-medium text-gray-900" x-text="'Image ' + (index + 1)"></span>
-                                                <span x-show="index === 0" class="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">Primary</span>
-                                            </div>
-                                            <p class="mt-1 text-xs text-gray-500" x-text="file.name"></p>
-                                        </div>
-                                    </div>
-                                </template>
-
-                                <!-- Add More Button -->
-                                <label class="relative block cursor-pointer">
-                                    <input type="file"
-                                           name="images[]"
-                                           multiple
-                                           accept="image/*"
-                                           class="hidden"
-                                           @change="handleFiles($event)">
-                                    <div class="h-full border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-blue-500 transition-colors duration-200 flex flex-col items-center justify-center min-h-[200px]">
-                                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                        </svg>
-                                        <span class="mt-2 block text-sm font-medium text-blue-600">
-                                            Add More Images
-                                        </span>
-                                    </div>
+                                       @change="handleFiles($event)"
+                                       id="add-more-images">
+                                <label for="add-more-images"
+                                       class="h-full border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-blue-500 transition-colors duration-200 flex flex-col items-center justify-center min-h-[200px] cursor-pointer">
+                                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                    <span class="mt-2 block text-sm font-medium text-blue-600">
+                                        Add More Images
+                                    </span>
                                 </label>
+                                <button type="button"
+                                        @click="showMediaModal = true"
+                                        class="mt-2 w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                                    <i class="fas fa-photo-film mr-2"></i>
+                                    Choose from Media Library
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -890,7 +870,127 @@
             </div>
         </form>
     </div>
+
+    <!-- Media Modal -->
+    <div x-show="showMediaModal"
+         x-cloak
+         class="fixed inset-0 z-50 overflow-hidden"
+         role="dialog"
+         aria-modal="true"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+
+        <!-- Modal Container -->
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <!-- Modal Content -->
+                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl"
+                     @click.outside="showMediaModal = false">
+
+                    <!-- Modal Header -->
+                    <div class="bg-white px-6 py-4 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-medium text-gray-900">Select Media</h3>
+                            <div class="flex items-center gap-4">
+                                <!-- View Toggle -->
+                                <div class="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+                                    <button @click="view = 'grid'"
+                                            :class="{'bg-white shadow': view === 'grid'}"
+                                            class="p-2 rounded-lg transition-all duration-200">
+                                        <i class="fas fa-th"></i>
+                                    </button>
+                                    <button @click="view = 'list'"
+                                            :class="{'bg-white shadow': view === 'list'}"
+                                            class="p-2 rounded-lg transition-all duration-200">
+                                        <i class="fas fa-list"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Search -->
+                                <div class="relative">
+                                    <input type="text"
+                                           x-model="searchQuery"
+                                           placeholder="Search media..."
+                                           class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                                </div>
+
+                                <!-- Filter -->
+                                <select x-model="filterType"
+                                        class="border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="all">All Types</option>
+                                    <option value="image">Images</option>
+                                    <option value="video">Videos</option>
+                                    <option value="document">Documents</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Body -->
+                    <div class="bg-gray-50 p-6">
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 max-h-[60vh] overflow-y-auto">
+                            @foreach(\App\Models\Media::where('mime_type', 'like', 'image/%')->latest()->get() as $media)
+                                <div class="relative group cursor-pointer bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200"
+                                     @click="selectMedia('{{ $media->path }}', '{{ Storage::url($media->path) }}')">
+                                    <img src="{{ Storage::url($media->path) }}"
+                                         alt="{{ $media->name }}"
+                                         class="w-full aspect-square object-cover">
+
+                                    <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                                        <div class="transform scale-0 group-hover:scale-100 transition-transform duration-200">
+                                            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                                                <i class="fas fa-plus text-blue-600"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="p-2 border-t border-gray-100">
+                                        <p class="text-xs font-medium truncate">{{ $media->name }}</p>
+                                        <p class="text-xs text-gray-500">{{ number_format($media->size / 1024, 2) }} KB</p>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm text-gray-600">
+                                <span x-text="selectedMedia.length"></span> items selected
+                            </span>
+                            <button @click="clearSelection"
+                                    x-show="selectedMedia.length > 0"
+                                    class="text-sm text-red-600 hover:text-red-700">
+                                Clear
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <a href="{{ route('admin.media.create') }}"
+                               class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors duration-200">
+                                Upload New Media
+                            </a>
+                            <button type="button"
+                                    @click="showMediaModal = false"
+                                    class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors duration-200">
+                                Done
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+@endsection
 
 @push('scripts')
 <script>
@@ -1057,4 +1157,3 @@
     });
 </script>
 @endpush
-@endsection

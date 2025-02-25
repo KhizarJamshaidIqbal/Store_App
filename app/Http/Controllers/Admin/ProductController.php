@@ -175,7 +175,7 @@ class ProductController extends Controller
                 'dangerous_goods' => 'boolean',
                 'is_draft' => 'boolean',
                 'status' => 'required|string|in:active,inactive,draft',
-                'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+                'images' => 'nullable|string',
                 'variants' => 'nullable|array',
                 'variants.*.name' => 'required_with:variants|string|max:255',
                 'variants.*.value' => 'required_with:variants|string|max:255',
@@ -202,17 +202,32 @@ class ProductController extends Controller
             $product = Product::create($validated);
             Log::info('Product created', ['product_id' => $product->id]);
 
-            // Handle image uploads
+            // Handle images from media library
+            if ($request->has('images')) {
+                $images = json_decode($request->images, true);
+                if (is_array($images)) {
+                    // Attach images to product
+                    foreach ($images as $index => $imagePath) {
+                        $product->images()->create([
+                            'image_path' => $imagePath,
+                            'is_primary' => $index === 0, // First image is primary
+                            'sort_order' => $index
+                        ]);
+                    }
+                }
+            }
+
+            // Handle uploaded files if any
             if ($request->hasFile('images')) {
-                foreach ($request->file('images') as $key => $image) {
-                    $path = $image->store('products', 'public');
+                $uploadedFiles = $request->file('images');
+                foreach ($uploadedFiles as $index => $file) {
+                    $path = $file->store('products', 'public');
                     $product->images()->create([
                         'image_path' => $path,
-                        'sort_order' => $key,
-                        'is_primary' => $key === 0 // First image is primary
+                        'is_primary' => false,
+                        'sort_order' => count(json_decode($request->images ?? '[]', true)) + $index
                     ]);
                 }
-                Log::info('Product images uploaded', ['product_id' => $product->id]);
             }
 
             // Handle variants
@@ -255,8 +270,7 @@ class ProductController extends Controller
         try {
             DB::beginTransaction();
 
-            // Validate the request
-            $validatedData = $request->validate([
+            $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'slug' => 'required|string|max:255|unique:products,slug,' . $product->id,
                 'category_id' => 'required|exists:categories,id',
@@ -287,6 +301,7 @@ class ProductController extends Controller
                 'package_height' => 'nullable|numeric',
                 'dangerous_goods' => 'boolean',
                 'status' => 'required|string|in:active,inactive,draft',
+                'images' => 'nullable|string',
                 'variants' => 'nullable|array',
                 'variants.*.name' => 'required|string|max:255',
                 'variants.*.value' => 'required|string|max:255',
@@ -298,45 +313,76 @@ class ProductController extends Controller
 
             // Update product
             $product->update([
-                'name' => $validatedData['name'],
-                'slug' => $validatedData['slug'],
-                'category_id' => $validatedData['category_id'],
-                'description' => $validatedData['description'],
-                'highlights' => $validatedData['highlights'],
-                'sku' => $validatedData['sku'],
-                'shop_sku' => $validatedData['shop_sku'],
-                'brand' => $validatedData['brand'],
-                'model' => $validatedData['model'],
-                'texture' => $validatedData['texture'],
-                'color_family' => $validatedData['color_family'],
-                'country_of_origin' => $validatedData['country_of_origin'],
-                'pack_type' => $validatedData['pack_type'],
-                'volume' => $validatedData['volume'],
-                'weight' => $validatedData['weight'],
-                'material' => $validatedData['material'],
-                'features' => $validatedData['features'],
-                'express_delivery_countries' => json_encode($validatedData['express_delivery_countries'] ?? []),
-                'brand_classification' => $validatedData['brand_classification'],
-                'shelf_life' => $validatedData['shelf_life'],
-                'price' => $validatedData['price'],
-                'special_price' => $validatedData['special_price'],
-                'stock' => $validatedData['stock'],
-                'package_weight' => $validatedData['package_weight'],
-                'package_length' => $validatedData['package_length'],
-                'package_width' => $validatedData['package_width'],
-                'package_height' => $validatedData['package_height'],
-                'dangerous_goods' => $validatedData['dangerous_goods'] ?? false,
-                'status' => $validatedData['status'],
+                'name' => $validated['name'],
+                'slug' => $validated['slug'],
+                'category_id' => $validated['category_id'],
+                'description' => $validated['description'],
+                'highlights' => $validated['highlights'],
+                'sku' => $validated['sku'],
+                'shop_sku' => $validated['shop_sku'],
+                'brand' => $validated['brand'],
+                'model' => $validated['model'],
+                'texture' => $validated['texture'],
+                'color_family' => $validated['color_family'],
+                'country_of_origin' => $validated['country_of_origin'],
+                'pack_type' => $validated['pack_type'],
+                'volume' => $validated['volume'],
+                'weight' => $validated['weight'],
+                'material' => $validated['material'],
+                'features' => $validated['features'],
+                'express_delivery_countries' => json_encode($validated['express_delivery_countries'] ?? []),
+                'brand_classification' => $validated['brand_classification'],
+                'shelf_life' => $validated['shelf_life'],
+                'price' => $validated['price'],
+                'special_price' => $validated['special_price'],
+                'stock' => $validated['stock'],
+                'package_weight' => $validated['package_weight'],
+                'package_length' => $validated['package_length'],
+                'package_width' => $validated['package_width'],
+                'package_height' => $validated['package_height'],
+                'dangerous_goods' => $validated['dangerous_goods'] ?? false,
+                'status' => $validated['status'],
                 'is_draft' => $request->status === 'Draft' ? 1 : 0,
             ]);
 
+            // Handle images from media library
+            if ($request->has('images')) {
+                // Delete existing images first
+                $product->images()->delete();
+
+                $images = json_decode($request->images, true);
+                if (is_array($images)) {
+                    // Attach new images to product
+                    foreach ($images as $index => $imagePath) {
+                        $product->images()->create([
+                            'image_path' => $imagePath,
+                            'is_primary' => $index === 0, // First image is primary
+                            'sort_order' => $index
+                        ]);
+                    }
+                }
+            }
+
+            // Handle uploaded files if any
+            if ($request->hasFile('images')) {
+                $uploadedFiles = $request->file('images');
+                foreach ($uploadedFiles as $index => $file) {
+                    $path = $file->store('products', 'public');
+                    $product->images()->create([
+                        'image_path' => $path,
+                        'is_primary' => false,
+                        'sort_order' => count(json_decode($request->images ?? '[]', true)) + $index
+                    ]);
+                }
+            }
+
             // Handle variants
-            if (isset($validatedData['variants'])) {
+            if ($request->has('variants')) {
                 // Delete existing variants
                 $product->variants()->delete();
 
                 // Create new variants
-                foreach ($validatedData['variants'] as $variantData) {
+                foreach ($request->input('variants') as $variantData) {
                     $product->variants()->create([
                         'name' => $variantData['name'],
                         'value' => $variantData['value'],
@@ -366,9 +412,9 @@ class ProductController extends Controller
             }
             $product = Product::findOrFail($product->id);
             // If status is active, ensure is_draft is false
-    if ($request->status === 'active') {
-        $request->merge(['is_draft' => 0]);
-    }
+            if ($request->status === 'active') {
+                $request->merge(['is_draft' => 0]);
+            }
 
             return redirect()->route('admin.products.index')
                 ->with('success', 'Product updated successfully!');

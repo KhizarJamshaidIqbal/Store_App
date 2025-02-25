@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\SpecialOfferController;
 use App\Http\Controllers\Admin\RecommendedProductController;
 use App\Http\Controllers\Admin\PopularProductController;
+use App\Http\Controllers\Admin\ApiDocumentationController;
 
 // Authentication Routes
 Auth::routes();
@@ -81,6 +82,9 @@ Route::prefix('admin')
         Route::resource('popular-products', PopularProductController::class)->except(['edit', 'update']);
         Route::post('popular-products/update-positions', [PopularProductController::class, 'updatePositions'])
             ->name('popular-products.update-positions');
+
+        // API Documentation Routes
+        Route::get('api-documentation', [ApiDocumentationController::class, 'index'])->name('api-documentation.index');
     });
 
 Route::middleware('auth')->group(function () {

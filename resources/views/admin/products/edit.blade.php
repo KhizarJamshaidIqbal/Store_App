@@ -537,618 +537,579 @@
                         </div>
                     </div>
 
-                    <!-- Product Images -->
-                    <div class="bg-white rounded-lg shadow-sm overflow-hidden rounded-lg shadow-sm border border-gray-200">
-                        <div class="p-6 border-b border-gray-200">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-3">
-                                    <div class="flex-shrink-0 bg-blue-100 rounded-lg p-3">
-                                        <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <h3 class="text-lg font-semibold text-gray-900">Product Images</h3>
-                                        <p class="text-sm text-gray-500">Upload and manage product images. First image will be used as the primary image.</p>
-                                    </div>
+                    <!-- Product Images Section -->
+                    <div class="p-6 space-y-6" x-data="{
+                        showMediaModal: false,
+                        selectedMedia: {{ json_encode($product->images->pluck('image_path')->toArray()) }},
+                        previews: {{ json_encode($product->images->map(fn($img) => asset('storage/' . $img->image_path))->toArray()) }},
+                        searchQuery: '',
+                        filterType: 'all',
+                        view: 'grid',
+                        files: [],
+                        uploadError: null,
+
+                        selectMedia(path, url) {
+                            if (!this.selectedMedia.includes(path)) {
+                                this.selectedMedia.push(path);
+                                this.previews.push(url);
+                            }
+                        },
+
+                        removeMedia(index) {
+                            this.selectedMedia.splice(index, 1);
+                            this.previews.splice(index, 1);
+                        },
+
+                        clearSelection() {
+                            this.selectedMedia = [];
+                            this.previews = [];
+                        },
+
+                        handleFiles(event) {
+                            let newFiles = Array.from(event.target.files || event.dataTransfer.files);
+                            this.validateFiles(newFiles);
+                        },
+
+                        validateFiles(newFiles) {
+                            this.uploadError = null;
+                            const validFiles = newFiles.filter(file => {
+                                if (!file.type.startsWith('image/')) {
+                                    this.uploadError = 'Please upload only image files (PNG, JPG, GIF).';
+                                    return false;
+                                }
+                                if (file.size > 10 * 1024 * 1024) {
+                                    this.uploadError = 'Image size should not exceed 10MB.';
+                                    return false;
+                                }
+                                return true;
+                            });
+                            if (validFiles.length) {
+                                validFiles.forEach(file => {
+                                    const reader = new FileReader();
+                                    reader.onload = (e) => {
+                                        this.files.push({
+                                            file: file,
+                                            preview: e.target.result,
+                                            name: file.name
+                                        });
+                                    };
+                                    reader.readAsDataURL(file);
+                                });
+                            }
+                        }
+                    }">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <div>
+                                    <h3 class="text-lg font-medium text-gray-900">Product Images</h3>
+                                    <p class="text-sm text-gray-500">Upload and manage product images. First image will be used as the primary image.</p>
                                 </div>
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                                    {{ count($product->images) }} Images
-                                </span>
                             </div>
                         </div>
 
-                        <div class="p-6 space-y-6">
+                        <!-- Hidden input to store selected media paths -->
+                        <input type="hidden" name="images" x-model="JSON.stringify(selectedMedia)">
 
+                        <!-- Error Message -->
+                        <div x-show="uploadError" x-text="uploadError" class="text-red-600 text-sm"></div>
 
-                            <!-- Upload Section -->
-                            <div class="mt-6">
-                                <form id="uploadForm" class="w-full" enctype="multipart/form-data">
-                                    <div class="w-full mx-auto flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-blue-400 transition-colors duration-200 cursor-pointer bg-gray-50 group-hover:bg-gray-100"
-                                         ondrop="handleDrop(event)"
-                                         ondragover="handleDragOver(event)"
-                                         ondragleave="handleDragLeave(event)">
-                                        <div class="space-y-2 text-center">
-                                            <svg class="mx-auto h-12 w-12 text-gray-400 group-hover:text-blue-500 transition-colors duration-200" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <!-- Image Grid -->
+                        <div x-show="files.length > 0 || previews.length > 0" class="space-y-4">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <!-- Media Library Previews -->
+                                <template x-for="(preview, index) in previews" :key="'media-'+index">
+                                    <div class="relative bg-white rounded-lg shadow-sm overflow-hidden">
+                                        <div class="aspect-w-3 aspect-h-2">
+                                            <img :src="preview" class="object-cover w-full h-full">
+                                        </div>
+                                        <div x-show="index === 0" class="absolute top-2 left-2 px-2 py-1 bg-blue-500 text-white text-xs font-medium rounded-full">
+                                            Primary
+                                        </div>
+                                        <button @click="removeMedia(index)" class="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow-lg hover:bg-gray-100">
+                                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                             </svg>
-                                            <div class="flex text-sm text-gray-600 group-hover:text-blue-500 transition-colors duration-200">
-                                                <label for="images" class="relative cursor-pointer rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none">
-                                                    <span>Upload images</span>
-                                                    <input id="images" name="images[]" type="file" class="sr-only" multiple accept="image/*" onchange="handleFileSelect(event)">
-                                                </label>
-                                                <p class="pl-1">or drag and drop</p>
-                                            </div>
-                                            <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
-                                        </div>
-                                    </div>
-
-                                    <!-- Upload Progress -->
-                                    <div id="uploadProgress" class="hidden mt-4">
-                                        <div class="relative pt-1">
-                                            <div class="flex mb-2 items-center justify-between">
-                                                <div>
-                                                    <span class="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-blue-600 bg-blue-200">
-                                                        Uploading
-                                                    </span>
-                                                </div>
-                                                <div class="text-right">
-                                                    <span class="text-xs font-semibold inline-block text-blue-600">
-                                                        <span id="uploadPercentage">0</span>%
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div class="overflow-hidden h-2 mb-4 text-xs flex rounded bg-blue-200">
-                                                <div id="uploadProgressBar" class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500 transition-all duration-300" style="width: 0%"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-
-                            <!-- Image Gallery -->
-<div id="image-gallery" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-    @if($product->images && count($product->images) > 0)
-        @foreach($product->images as $index => $image)
-            <div class="relative group cursor-move rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200" data-id="{{ $image->id }}">
-                <div class="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-t-lg bg-gray-200">
-                    <img src="{{ asset('storage/' . $image->image_path) }}"
-                        alt="Product image {{ $index + 1 }}"
-                        class="object-cover object-center w-full h-full transform group-hover:scale-105 transition-transform duration-300">
-                    <div class="absolute inset-0 bg-gradient-to-b from-transparent to-black opacity-0 group-hover:opacity-60 transition-opacity duration-300"></div>
-                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-                        <div class="flex items-center space-x-2">
-                            <button type="button" onclick="setPrimaryImage('{{ $image->id }}')"
-                                class="inline-flex items-center p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transform hover:scale-110 transition-all duration-200"
-                                title="Set as primary image">
-                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                                </svg>
-                            </button>
-                            <button type="button" onclick="deleteImage({{ $index }}, '{{ $image->id }}')"
-                                class="inline-flex items-center p-2 rounded-full bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transform hover:scale-110 transition-all duration-200">
-                                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="p-3 bg-white rounded-b-lg">
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-500">Image {{ $index + 1 }}</span>
-                        @if($image->is_primary)
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                Primary
-                            </span>
-                        @endif
-                    </div>
-                </div>
-                <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    <div class="flex items-center px-2 py-1 bg-gray-900 rounded-full shadow-lg">
-                        <svg class="h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                        <span class="text-white text-xs ml-1">Drag to reorder</span>
-                    </div>
-                </div>
-            </div>
-        @endforeach
-    @endif
-</div>
-               </div>
-                        @push('scripts')
-                        <script>
-                            // Drag and drop handlers
-                            function handleDragOver(e) {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                e.currentTarget.classList.add('border-blue-500', 'bg-blue-50');
-                            }
-
-                            function handleDragLeave(e) {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                e.currentTarget.classList.remove('border-blue-500', 'bg-blue-50');
-                            }
-
-                            function handleDrop(e) {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                e.currentTarget.classList.remove('border-blue-500', 'bg-blue-50');
-
-                                const dt = e.dataTransfer;
-                                const files = dt.files;
-
-                                handleFiles(files);
-                            }
-
-                            function handleFileSelect(e) {
-                                const files = e.target.files;
-                                handleFiles(files);
-                            }
-
-                            function handleFiles(files) {
-                                const formData = new FormData();
-                                let totalSize = 0;
-                                const maxSize = 10 * 1024 * 1024; // 10MB
-
-                                // Validate files
-                                for (const file of files) {
-                                    if (!file.type.match('image.*')) {
-                                        showNotification('Please upload only image files', 'error');
-                                        return;
-                                    }
-                                    if (file.size > maxSize) {
-                                        showNotification(`File ${file.name} is too large. Maximum size is 10MB`, 'error');
-                                        return;
-                                    }
-                                    totalSize += file.size;
-                                    formData.append('images[]', file);
-                                }
-
-                                if (totalSize > maxSize) {
-                                    showNotification('Total file size exceeds 10MB limit', 'error');
-                                    return;
-                                }
-
-                                formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
-
-                                // Show progress bar
-                                const progressBar = document.getElementById('uploadProgress');
-                                const progressBarFill = document.getElementById('uploadProgressBar');
-                                const progressPercentage = document.getElementById('uploadPercentage');
-                                progressBar.classList.remove('hidden');
-
-                                // Upload files
-                                const xhr = new XMLHttpRequest();
-                                xhr.open('POST', '/admin/products/{{ $product->id }}/images', true);
-
-                                xhr.upload.onprogress = function(e) {
-                                    if (e.lengthComputable) {
-                                        const percentComplete = (e.loaded / e.total) * 100;
-                                        progressBarFill.style.width = percentComplete + '%';
-                                        progressPercentage.textContent = Math.round(percentComplete);
-                                    }
-                                };
-
-                                xhr.onload = function() {
-                                    if (xhr.status === 200) {
-                                        const response = JSON.parse(xhr.responseText);
-                                        if (response.success) {
-                                            showNotification(response.message, 'success');
-                                            // Refresh the page to show uploaded images
-                                            setTimeout(() => window.location.reload(), 1000);
-                                        } else {
-                                            throw new Error(response.message || 'Upload failed');
-                                        }
-                                    } else {
-                                        showNotification('Upload failed', 'error');
-                                    }
-                                    progressBar.classList.add('hidden');
-                                };
-
-                                xhr.onerror = function() {
-                                    showNotification('Upload failed', 'error');
-                                    progressBar.classList.add('hidden');
-                                };
-
-                                xhr.send(formData);
-                            }
-                        </script>
-                        @endpush
-                    </div>
-                </div>
-
-                <!-- Product Variants -->
-                <div class="space-y-6 bg-white rounded-lg shadow-sm overflow-hidden p-4 border border-gray-200">
-                    <div>
-                        <h3 class="text-lg leading-6 font-medium text-gray-900 flex items-center">
-                            <svg class="h-5 w-5 text-gray-400 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                            </svg>
-                            Product Variants
-                        </h3>
-                        <p class="mt-1 text-sm text-gray-500">Add different variations of the product (e.g., sizes, colors).</p>
-                    </div>
-
-                    <div id="variants-container">
-                        @if(isset($product->variants))
-                            @foreach($product->variants as $index => $variant)
-                                <div class="variant-row border rounded-lg p-4 mb-4 bg-white" data-variant-id="{{ $index }}">
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Variant Name</label>
-                                            <input type="text" name="variants[{{ $index }}][name]" value="{{ $variant->name }}"
-                                                class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Value</label>
-                                            <input type="text" name="variants[{{ $index }}][value]" value="{{ $variant->value }}"
-                                                class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Status</label>
-                                            <select name="variants[{{ $index }}][status]"
-                                                class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                                                <option value="active" {{ $variant->status == 'active' ? 'selected' : '' }}>Active</option>
-                                                <option value="inactive" {{ $variant->status == 'inactive' ? 'selected' : '' }}>Inactive</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Price ($)</label>
-                                            <div class="mt-1 relative rounded-md shadow-sm">
-                                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                    <span class="text-gray-500 sm:text-sm">$</span>
-                                                </div>
-                                                <input type="number" step="0.01" name="variants[{{ $index }}][price]" value="{{ $variant->price }}"
-                                                    class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md" required>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Special Price ($)</label>
-                                            <div class="mt-1 relative rounded-md shadow-sm">
-                                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                    <span class="text-gray-500 sm:text-sm">$</span>
-                                                </div>
-                                                <input type="number" step="0.01" name="variants[{{ $index }}][special_price]" value="{{ $variant->special_price }}"
-                                                    class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md">
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-medium text-gray-700">Stock</label>
-                                            <input type="number" name="variants[{{ $index }}][stock]" value="{{ $variant->stock }}"
-                                                class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
-                                        </div>
-                                    </div>
-                                    <div class="mt-4 text-right">
-                                        <button type="button" onclick="removeVariant({{ $index }})"
-                                            class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                                            <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                            </svg>
-                                            Remove Variant
                                         </button>
                                     </div>
+                                </template>
+
+                                <!-- Add More Button -->
+                                <div class="relative">
+                                    <button type="button"
+                                            @click="showMediaModal = true"
+                                            class="h-full w-full border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-blue-500 transition-colors duration-200 flex flex-col items-center justify-center min-h-[200px]">
+                                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                        </svg>
+                                        <span class="mt-2 block text-sm font-medium text-blue-600">
+                                            Add More Images
+                                        </span>
+                                    </button>
                                 </div>
-                            @endforeach
-                        @endif
-                    </div>
+                            </div>
+                        </div>
 
-                    <div class="mt-4">
-                        <button type="button" onclick="addVariant()"
-                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6a2 2 0 002-2V6a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 002 2z" />
-                            </svg>
-                            Add Variant
-                        </button>
-                    </div>
-                </div>
-                @push('scripts')
-                <script>
-                document.addEventListener('alpine:init', () => {
-                    Alpine.data('sortable', () => ({
-                        init() {
-                            new Sortable(this.$el, {
-                                animation: 150,
-                                ghostClass: 'opacity-50',
-                                onUpdate: (evt) => {
-                                    // Get all children and ensure IDs are parsed as integers
-                                    const order = Array.from(this.$el.children)
-                                        .map(item => {
-                                            const id = parseInt(item.dataset.id, 10);
-                                            if (isNaN(id)) {
-                                                console.error('Invalid ID:', item.dataset.id);
-                                                return null;
-                                            }
-                                            return id;
-                                        })
-                                        .filter(id => id !== null); // Remove any invalid IDs
+                        <!-- Empty State -->
+                        <div x-show="files.length === 0 && previews.length === 0"
+                             class="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
+                            <button type="button"
+                                    @click="showMediaModal = true"
+                                    class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                                <i class="fas fa-photo-film mr-2"></i>
+                                Choose from Media Library
+                            </button>
+                        </div>
 
-                                    // Debug log
-                                    console.log('Sending order:', order);
+                        <!-- Media Modal -->
+                        <div x-show="showMediaModal"
+                             x-cloak
+                             class="fixed inset-0 z-50 overflow-hidden"
+                             role="dialog"
+                             aria-modal="true">
+                            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
 
-                                    // Send the request
-                                    axios.post('{{ route("admin.products.images.reorder") }}', {
-                                        order: order
-                                    }, {
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            'Accept': 'application/json'
-                                        }
-                                    }).then(response => {
-                                        if (!response.data.success) {
-                                            console.error('Reordering failed');
-                                        }
-                                    }).catch(error => {
-                                        console.error('Error:', error);
-                                    });
-                                }
-                            });
-                        }
-                    }));
-                });
-                </script>
-                @endpush
-                @push('scripts')
-                <script>
-                    // Function to generate slug from text
-                    function generateSlug(text) {
-                        return text
-                            .toString()
-                            .toLowerCase()
-                            .trim()
-                            .replace(/\s+/g, '-')           // Replace spaces with -
-                            .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
-                            .replace(/\-\-+/g, '-')         // Replace multiple - with single -
-                            .replace(/^[-_]+/, '')             // Trim - and _ from start of text
-                            .replace(/[-_]+$/', '');            // Trim - and _ from end of text
-                    }
+                            <div class="fixed inset-0 z-10 overflow-y-auto">
+                                <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                                    <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl"
+                                         @click.outside="showMediaModal = false">
+                                        <!-- Modal Header -->
+                                        <div class="bg-white px-6 py-4 border-b border-gray-200">
+                                            <div class="flex items-center justify-between">
+                                                <h3 class="text-lg font-medium text-gray-900">Select Media</h3>
+                                                <div class="flex items-center gap-4">
+                                                    <!-- View Toggle -->
+                                                    <div class="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+                                                        <button @click="view = 'grid'"
+                                                                :class="{'bg-white shadow': view === 'grid'}"
+                                                                class="p-2 rounded-lg transition-all duration-200">
+                                                            <i class="fas fa-th"></i>
+                                                        </button>
+                                                        <button @click="view = 'list'"
+                                                                :class="{'bg-white shadow': view === 'list'}"
+                                                                class="p-2 rounded-lg transition-all duration-200">
+                                                            <i class="fas fa-list"></i>
+                                                        </button>
+                                                    </div>
 
-                    // Auto-generate slug from product name
-                    document.getElementById('name').addEventListener('input', function(e) {
-                        const slugInput = document.getElementById('slug');
-                        if (slugInput) {
-                            slugInput.value = generateSlug(e.target.value);
-                        }
-                    });
+                                                    <!-- Search -->
+                                                    <div class="relative">
+                                                        <input type="text"
+                                                               x-model="searchQuery"
+                                                               placeholder="Search media..."
+                                                               class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg">
+                                                        <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                    // Handle form submission
-                    document.getElementById('product-form').addEventListener('submit', async function(e) {
-                        e.preventDefault();
+                                        <!-- Modal Body -->
+                                        <div class="bg-gray-50 p-6">
+                                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 max-h-[60vh] overflow-y-auto">
+                                                @foreach(\App\Models\Media::where('mime_type', 'like', 'image/%')->latest()->get() as $media)
+                                                    <div class="relative group cursor-pointer bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200"
+                                                         @click="selectMedia('{{ $media->path }}', '{{ Storage::url($media->path) }}')">
+                                                        <img src="{{ Storage::url($media->path) }}"
+                                                             alt="{{ $media->name }}"
+                                                             class="w-full aspect-square object-cover">
+                                                        <div class="p-2 border-t border-gray-100">
+                                                            <p class="text-xs font-medium truncate">{{ $media->name }}</p>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
 
-                        const form = this;
-                        const submitButton = form.querySelector('[type="submit"]');
-                        const originalText = submitButton.innerHTML;
-                        submitButton.disabled = true;
-                        submitButton.innerHTML = 'Updating...';
-
-                        try {
-                            const formData = new FormData(form);
-                            const jsonData = {};
-
-                            // Handle multiple select fields - with null check
-                            const selectedCountries = [];
-                            const expressDeliverySelect = document.getElementById('express_delivery_countries');
-                            if (expressDeliverySelect && expressDeliverySelect.selectedOptions) {
-                                selectedCountries.push(...Array.from(expressDeliverySelect.selectedOptions).map(option => option.value));
-                            }
-
-                            // Convert FormData to object
-                            for (let [key, value] of formData.entries()) {
-                                if (key === '_token' || key === '_method') continue;
-
-                                if (key.includes('variants[')) {
-                                    const matches = key.match(/variants\[(\d+)\]\[([^\]]+)\]/);
-                                    if (matches) {
-                                        const [_, index, field] = matches;
-                                        if (!jsonData.variants) jsonData.variants = [];
-                                        if (!jsonData.variants[index]) jsonData.variants[index] = {};
-                                        jsonData.variants[index][field] = value;
-                                    }
-                                } else if (key === 'express_delivery_countries[]') {
-                                    // Skip as we'll handle it separately
-                                    continue;
-                                } else {
-                                    jsonData[key] = value;
-                                }
-                            }
-
-                            // Add express delivery countries
-                            jsonData.express_delivery_countries = selectedCountries;
-
-                            // Clean up variants array
-                            if (jsonData.variants) {
-                                jsonData.variants = jsonData.variants.filter(Boolean);
-                            }
-
-                            console.log('Submitting data:', jsonData); // Debug log
-
-                            // Make the request
-                            const response = await fetch(form.action, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                                    'Accept': 'application/json'
-                                },
-                                body: JSON.stringify({
-                                    ...jsonData,
-                                    _token: formData.get('_token'),
-                                    _method: 'PUT'
-                                })
-                            });
-
-                            // Handle the response
-                            if (!response.ok) {
-                                const text = await response.text();
-                                console.error('Server response:', text);
-                                throw new Error('Server error: ' + response.status);
-                            }
-
-                            const result = await response.json();
-
-                            if (result.success) {
-                                showNotification(result.message || 'Product updated successfully', 'success');
-
-                                // Update category display if available
-                                if (result.data?.category) {
-                                    const categorySelector = document.querySelector('[x-data]');
-                                    if (categorySelector) {
-                                        const alpineData = Alpine.$data(categorySelector);
-                                        if (alpineData) {
-                                            alpineData.selectedCategory = {
-                                                id: result.data.category.id,
-                                                name: result.data.category.name
-                                            };
-                                            // Update the hidden input if it exists
-                                            const hiddenInput = categorySelector.querySelector('[x-ref="hiddenInput"]');
-                                            if (hiddenInput) {
-                                                hiddenInput.value = result.data.category.id;
-                                            } else {
-                                                console.warn('Hidden input not found');
-                                            }
-                                        }
-                                    }
-                                }
-                            } else {
-                                throw new Error(result.message || 'Failed to update product');
-                            }
-                        } catch (error) {
-                            console.error('Error:', error);
-                            showNotification(error.message || 'Failed to update product', 'error');
-                        } finally {
-                            submitButton.disabled = false;
-                            submitButton.innerHTML = originalText;
-                        }
-                    });
-
-                    function showNotification(message, type = 'success', productData = null) {
-                        const notification = document.createElement('div');
-                        notification.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg max-w-sm w-full bg-white border ${
-                            type === 'success' ? 'border-green-500' : 'border-red-500'
-                        }`;
-
-                        if (type === 'success' && productData) {
-                            notification.innerHTML = `
-                                <div class="flex items-start space-x-4">
-                                    <div class="flex-shrink-0 w-16 h-16">
-                                        <img src="${productData.image}" alt="${productData.name}"
-                                            class="w-full h-full object-cover rounded">
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-medium text-gray-900">
-                                            ${message}
-                                        </p>
-                                        <div class="mt-1 text-sm text-gray-500">
-                                            <p class="font-medium">${productData.name}</p>
-                                            <p>Price: $${productData.price}</p>
-                                            <p>Stock: ${productData.stock}</p>
+                                        <!-- Modal Footer -->
+                                        <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-between items-center">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-sm text-gray-600">
+                                                    <span x-text="selectedMedia.length"></span> items selected
+                                                </span>
+                                                <button @click="clearSelection"
+                                                        x-show="selectedMedia.length > 0"
+                                                        class="text-sm text-red-600 hover:text-red-700">
+                                                    Clear
+                                                </button>
+                                            </div>
+                                            <button type="button"
+                                                    @click="showMediaModal = false"
+                                                    class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+                                                Done
+                                            </button>
                                         </div>
                                     </div>
-                                    <button type="button" class="flex-shrink-0 ml-4" onclick="this.parentElement.parentElement.remove()">
-                                        <svg class="w-4 h-4 text-gray-400 hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                        </svg>
-                                    </button>
                                 </div>
-                            `;
-                        } else {
-                            notification.innerHTML = `
-                                <div class="flex items-center justify-between">
-                                    <p class="text-sm ${type === 'success' ? 'text-green-600' : 'text-red-600'}">
-                                        ${message}
-                                    </p>
-                                    <button type="button" class="ml-4" onclick="this.parentElement.parentElement.remove()">
-                                        <svg class="w-4 h-4 text-gray-400 hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            `;
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Product Variants -->
+                    <div class="space-y-6 bg-white rounded-lg shadow-sm overflow-hidden p-4 border border-gray-200">
+                        <div>
+                            <h3 class="text-lg leading-6 font-medium text-gray-900 flex items-center">
+                                <svg class="h-5 w-5 text-gray-400 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                                Product Variants
+                            </h3>
+                            <p class="mt-1 text-sm text-gray-500">Add different variations of the product (e.g., sizes, colors).</p>
+                        </div>
+
+                        <div id="variants-container">
+                            @if(isset($product->variants))
+                                @foreach($product->variants as $index => $variant)
+                                    <div class="variant-row border rounded-lg p-4 mb-4 bg-white" data-variant-id="{{ $index }}">
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700">Variant Name</label>
+                                                <input type="text" name="variants[{{ $index }}][name]" value="{{ $variant->name }}"
+                                                    class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700">Value</label>
+                                                <input type="text" name="variants[{{ $index }}][value]" value="{{ $variant->value }}"
+                                                    class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700">Status</label>
+                                                <select name="variants[{{ $index }}][status]"
+                                                    class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                                    <option value="active" {{ $variant->status == 'active' ? 'selected' : '' }}>Active</option>
+                                                    <option value="inactive" {{ $variant->status == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700">Price ($)</label>
+                                                <div class="mt-1 relative rounded-md shadow-sm">
+                                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                        <span class="text-gray-500 sm:text-sm">$</span>
+                                                    </div>
+                                                    <input type="number" step="0.01" name="variants[{{ $index }}][price]" value="{{ $variant->price }}"
+                                                        class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md" required>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700">Special Price ($)</label>
+                                                <div class="mt-1 relative rounded-md shadow-sm">
+                                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                        <span class="text-gray-500 sm:text-sm">$</span>
+                                                    </div>
+                                                    <input type="number" step="0.01" name="variants[{{ $index }}][special_price]" value="{{ $variant->special_price }}"
+                                                        class="focus:ring-blue-500 focus:border-blue-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md">
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700">Stock</label>
+                                                <input type="number" name="variants[{{ $index }}][stock]" value="{{ $variant->stock }}"
+                                                    class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md" required>
+                                            </div>
+                                        </div>
+                                        <div class="mt-4 text-right">
+                                            <button type="button" onclick="removeVariant({{ $index }})"
+                                                class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                                <svg class="h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                                Remove Variant
+                                            </button>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            @endif
+                        </div>
+
+                        <div class="mt-4">
+                            <button type="button" onclick="addVariant()"
+                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6a2 2 0 002-2V6a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 002 2z" />
+                                </svg>
+                                Add Variant
+                            </button>
+                        </div>
+                    </div>
+                    @push('scripts')
+                    <script>
+                    document.addEventListener('alpine:init', () => {
+                        Alpine.data('sortable', () => ({
+                            init() {
+                                new Sortable(this.$el, {
+                                    animation: 150,
+                                    ghostClass: 'opacity-50',
+                                    onUpdate: (evt) => {
+                                        // Get all children and ensure IDs are parsed as integers
+                                        const order = Array.from(this.$el.children)
+                                            .map(item => {
+                                                const id = parseInt(item.dataset.id, 10);
+                                                if (isNaN(id)) {
+                                                    console.error('Invalid ID:', item.dataset.id);
+                                                    return null;
+                                                }
+                                                return id;
+                                            })
+                                            .filter(id => id !== null); // Remove any invalid IDs
+
+                                        // Debug log
+                                        console.log('Sending order:', order);
+
+                                        // Send the request
+                                        axios.post('{{ route("admin.products.images.reorder") }}', {
+                                            order: order
+                                        }, {
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'Accept': 'application/json'
+                                            }
+                                        }).then(response => {
+                                            if (!response.data.success) {
+                                                console.error('Reordering failed');
+                                            }
+                                        }).catch(error => {
+                                            console.error('Error:', error);
+                                        });
+                                    }
+                                });
+                            }
+                        }));
+                    });
+                    </script>
+                    @endpush
+                    @push('scripts')
+                    <script>
+                        // Function to generate slug from text
+                        function generateSlug(text) {
+                            return text
+                                .toString()
+                                .toLowerCase()
+                                .trim()
+                                .replace(/\s+/g, '-')           // Replace spaces with -
+                                .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+                                .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+                                .replace(/^[-_]+/, '')             // Trim - and _ from start of text
+                                .replace(/[-_]+$/', '');            // Trim - and _ from end of text
                         }
 
-                        document.body.appendChild(notification);
-                        setTimeout(() => notification.remove(), 5000);
-                    }
-                </script>
-                @endpush
+                        // Auto-generate slug from product name
+                        document.getElementById('name').addEventListener('input', function(e) {
+                            const slugInput = document.getElementById('slug');
+                            if (slugInput) {
+                                slugInput.value = generateSlug(e.target.value);
+                            }
+                        });
 
-                @push('scripts')
-                <script>
-                    // Initialize Sortable for image reordering
-                    const imageGallery = document.getElementById('image-gallery');
-                    if (imageGallery) {
-                        new Sortable(imageGallery, {
-                            animation: 150,
-                            ghostClass: 'bg-blue-100',
-                            onEnd: function(evt) {
-                                const imageIds = Array.from(imageGallery.children).map(el => parseInt(el.dataset.id));
+                        // Handle form submission
+                        document.getElementById('product-form').addEventListener('submit', async function(e) {
+                            e.preventDefault();
 
-                                // Send the new order to the server
-                                fetch('{{ route("admin.products.images.reorder") }}', {
+                            const form = this;
+                            const submitButton = form.querySelector('[type="submit"]');
+                            const originalText = submitButton.innerHTML;
+                            submitButton.disabled = true;
+                            submitButton.innerHTML = 'Updating...';
+
+                            try {
+                                const formData = new FormData(form);
+                                const jsonData = {};
+
+                                // Handle multiple select fields - with null check
+                                const selectedCountries = [];
+                                const expressDeliverySelect = document.getElementById('express_delivery_countries');
+                                if (expressDeliverySelect && expressDeliverySelect.selectedOptions) {
+                                    selectedCountries.push(...Array.from(expressDeliverySelect.selectedOptions).map(option => option.value));
+                                }
+
+                                // Convert FormData to object
+                                for (let [key, value] of formData.entries()) {
+                                    if (key === '_token' || key === '_method') continue;
+
+                                    if (key.includes('variants[')) {
+                                        const matches = key.match(/variants\[(\d+)\]\[([^\]]+)\]/);
+                                        if (matches) {
+                                            const [_, index, field] = matches;
+                                            if (!jsonData.variants) jsonData.variants = [];
+                                            if (!jsonData.variants[index]) jsonData.variants[index] = {};
+                                            jsonData.variants[index][field] = value;
+                                        }
+                                    } else if (key === 'express_delivery_countries[]') {
+                                        // Skip as we'll handle it separately
+                                        continue;
+                                    } else {
+                                        jsonData[key] = value;
+                                    }
+                                }
+
+                                // Add express delivery countries
+                                jsonData.express_delivery_countries = selectedCountries;
+
+                                // Clean up variants array
+                                if (jsonData.variants) {
+                                    jsonData.variants = jsonData.variants.filter(Boolean);
+                                }
+
+                                console.log('Submitting data:', jsonData); // Debug log
+
+                                // Make the request
+                                const response = await fetch(form.action, {
                                     method: 'POST',
                                     headers: {
                                         'Content-Type': 'application/json',
                                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                                         'Accept': 'application/json'
                                     },
-                                    body: JSON.stringify({ order: imageIds })
-                                })
-                                .then(response => {
-                                    if (!response.ok) {
-                                        return response.json().then(err => Promise.reject(err));
-                                    }
-                                    return response.json();
-                                })
-                                .then(data => {
-                                    if (data.success) {
-                                        showNotification('Image order updated successfully', 'success');
-                                    } else {
-                                        throw new Error(data.message || 'Failed to update image order');
-                                    }
-                                })
-                                .catch(error => {
-                                    console.error('Error:', error);
-                                    showNotification(error.message || 'Failed to update image order', 'error');
+                                    body: JSON.stringify({
+                                        ...jsonData,
+                                        _token: formData.get('_token'),
+                                        _method: 'PUT'
+                                    })
                                 });
+
+                                // Handle the response
+                                if (!response.ok) {
+                                    const text = await response.text();
+                                    console.error('Server response:', text);
+                                    throw new Error('Server error: ' + response.status);
+                                }
+
+                                const result = await response.json();
+
+                                if (result.success) {
+                                    showNotification(result.message || 'Product updated successfully', 'success');
+
+                                    // Update category display if available
+                                    if (result.data?.category) {
+                                        const categorySelector = document.querySelector('[x-data]');
+                                        if (categorySelector) {
+                                            const alpineData = Alpine.$data(categorySelector);
+                                            if (alpineData) {
+                                                alpineData.selectedCategory = {
+                                                    id: result.data.category.id,
+                                                    name: result.data.category.name
+                                                };
+                                                // Update the hidden input if it exists
+                                                const hiddenInput = categorySelector.querySelector('[x-ref="hiddenInput"]');
+                                                if (hiddenInput) {
+                                                    hiddenInput.value = result.data.category.id;
+                                                } else {
+                                                    console.warn('Hidden input not found');
+                                                }
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    throw new Error(result.message || 'Failed to update product');
+                                }
+                            } catch (error) {
+                                console.error('Error:', error);
+                                showNotification(error.message || 'Failed to update product', 'error');
+                            } finally {
+                                submitButton.disabled = false;
+                                submitButton.innerHTML = originalText;
                             }
                         });
-                    }
 
-                    // Function to set primary image
-                    function setPrimaryImage(imageId) {
-                        fetch(`/admin/products/images/${imageId}/set-primary`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            }
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                showNotification('Primary image updated successfully', 'success');
-                                // Refresh the page to show updated primary image
-                                window.location.reload();
+                        function showNotification(message, type = 'success', productData = null) {
+                            const notification = document.createElement('div');
+                            notification.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg max-w-sm w-full bg-white border ${
+                                type === 'success' ? 'border-green-500' : 'border-red-500'
+                            }`;
+
+                            if (type === 'success' && productData) {
+                                notification.innerHTML = `
+                                    <div class="flex items-start space-x-4">
+                                        <div class="flex-shrink-0 w-16 h-16">
+                                            <img src="${productData.image}" alt="${productData.name}"
+                                                class="w-full h-full object-cover rounded">
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-medium text-gray-900">
+                                                ${message}
+                                            </p>
+                                            <div class="mt-1 text-sm text-gray-500">
+                                                <p class="font-medium">${productData.name}</p>
+                                                <p>Price: $${productData.price}</p>
+                                                <p>Stock: ${productData.stock}</p>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="flex-shrink-0 ml-4" onclick="this.parentElement.parentElement.remove()">
+                                            <svg class="w-4 h-4 text-gray-400 hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                `;
                             } else {
-                                throw new Error(data.message || 'Failed to set primary image');
+                                notification.innerHTML = `
+                                    <div class="flex items-center justify-between">
+                                        <p class="text-sm ${type === 'success' ? 'text-green-600' : 'text-red-600'}">
+                                            ${message}
+                                        </p>
+                                        <button type="button" class="ml-4" onclick="this.parentElement.parentElement.remove()">
+                                            <svg class="w-4 h-4 text-gray-400 hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                `;
                             }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            showNotification(error.message || 'Failed to set primary image', 'error');
-                        });
-                    }
 
-                    // Function to delete image
-                    function deleteImage(index, imageId) {
-                        if (confirm('Are you sure you want to delete this image?')) {
-                            fetch(`/admin/products/images/${imageId}`, {
-                                method: 'DELETE',
+                            document.body.appendChild(notification);
+                            setTimeout(() => notification.remove(), 5000);
+                        }
+                    </script>
+                    @endpush
+
+                    @push('scripts')
+                    <script>
+                        // Initialize Sortable for image reordering
+                        const imageGallery = document.getElementById('image-gallery');
+                        if (imageGallery) {
+                            new Sortable(imageGallery, {
+                                animation: 150,
+                                ghostClass: 'bg-blue-100',
+                                onEnd: function(evt) {
+                                    const imageIds = Array.from(imageGallery.children).map(el => parseInt(el.dataset.id));
+
+                                    // Send the new order to the server
+                                    fetch('{{ route("admin.products.images.reorder") }}', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                            'Accept': 'application/json'
+                                        },
+                                        body: JSON.stringify({ order: imageIds })
+                                    })
+                                    .then(response => {
+                                        if (!response.ok) {
+                                            return response.json().then(err => Promise.reject(err));
+                                        }
+                                        return response.json();
+                                    })
+                                    .then(data => {
+                                        if (data.success) {
+                                            showNotification('Image order updated successfully', 'success');
+                                        } else {
+                                            throw new Error(data.message || 'Failed to update image order');
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('Error:', error);
+                                        showNotification(error.message || 'Failed to update image order', 'error');
+                                    });
+                                }
+                            });
+                        }
+
+                        // Function to set primary image
+                        function setPrimaryImage(imageId) {
+                            fetch(`/admin/products/images/${imageId}/set-primary`, {
+                                method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
                                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -1157,283 +1118,310 @@
                             .then(response => response.json())
                             .then(data => {
                                 if (data.success) {
-                                    // Remove the image element from the DOM
-                                    const imageElement = document.querySelector(`[data-id="${imageId}"]`);
-                                    if (imageElement) {
-                                        imageElement.remove();
-                                    }
-                                    showNotification('Image deleted successfully', 'success');
+                                    showNotification('Primary image updated successfully', 'success');
+                                    // Refresh the page to show updated primary image
+                                    window.location.reload();
                                 } else {
-                                    throw new Error(data.message || 'Failed to delete image');
+                                    throw new Error(data.message || 'Failed to set primary image');
                                 }
                             })
                             .catch(error => {
                                 console.error('Error:', error);
-                                showNotification(error.message || 'Failed to delete image', 'error');
+                                showNotification(error.message || 'Failed to set primary image', 'error');
                             });
                         }
-                    }
-                </script>
-                @endpush
 
-                @push('scripts')
-                <script>
-                    // Initialize TinyMCE for both Description and Highlights fields
-                    document.addEventListener('DOMContentLoaded', function() {
-                        tinymce.init({
-                            selector: '.editor',
-                            height: 300,
-                            menubar: false,
-                            plugins: [
-                                'advlist', 'autolink', 'lists', 'link', 'charmap',
-                                'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                                'insertdatetime', 'table', 'wordcount'
-                            ],
-                            toolbar: 'fontfamily fontsize | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent',
-                            toolbar_mode: 'wrap',
-                            font_family_formats: 'Arial=arial,helvetica,sans-serif; Times New Roman=times new roman,times,serif',
-                            font_size_formats: '8pt 10pt 12pt 14pt 16pt 18pt 24pt 36pt',
-                            content_style: `
-                                body {
-                                    font-family: Arial, sans-serif;
-                                    font-size: 14px;
-                                    line-height: 1.6;
-                                    color: #333;
-                                    padding: 0.5rem;
-                                }
-                            `,
-                            branding: false,
-                            statusbar: false,
-                            resize: false,
-                            setup: function(editor) {
-                                editor.on('change', function() {
-                                    editor.save();
+                        // Function to delete image
+                        function deleteImage(index, imageId) {
+                            if (confirm('Are you sure you want to delete this image?')) {
+                                fetch(`/admin/products/images/${imageId}`, {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                    }
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        // Remove the image element from the DOM
+                                        const imageElement = document.querySelector(`[data-id="${imageId}"]`);
+                                        if (imageElement) {
+                                            imageElement.remove();
+                                        }
+                                        showNotification('Image deleted successfully', 'success');
+                                    } else {
+                                        throw new Error(data.message || 'Failed to delete image');
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                    showNotification(error.message || 'Failed to delete image', 'error');
                                 });
+                            }
+                        }
+                    </script>
+                    @endpush
+
+                    @push('scripts')
+                    <script>
+                        // Initialize TinyMCE for both Description and Highlights fields
+                        document.addEventListener('DOMContentLoaded', function() {
+                            tinymce.init({
+                                selector: '.editor',
+                                height: 300,
+                                menubar: false,
+                                plugins: [
+                                    'advlist', 'autolink', 'lists', 'link', 'charmap',
+                                    'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                                    'insertdatetime', 'table', 'wordcount'
+                                ],
+                                toolbar: 'fontfamily fontsize | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent',
+                                toolbar_mode: 'wrap',
+                                font_family_formats: 'Arial=arial,helvetica,sans-serif; Times New Roman=times new roman,times,serif',
+                                font_size_formats: '8pt 10pt 12pt 14pt 16pt 18pt 24pt 36pt',
+                                content_style: `
+                                    body {
+                                        font-family: Arial, sans-serif;
+                                        font-size: 14px;
+                                        line-height: 1.6;
+                                        color: #333;
+                                        padding: 0.5rem;
+                                    }
+                                `,
+                                branding: false,
+                                statusbar: false,
+                                resize: false,
+                                setup: function(editor) {
+                                    editor.on('change', function() {
+                                        editor.save();
+                                    });
+                                }
+                            });
+                        });
+                    </script>
+                    @endpush
+
+                    @push('scripts')
+                    <script>
+                        // Handle form submission
+                        document.getElementById('product-form').addEventListener('submit', async function(e) {
+                            e.preventDefault();
+
+                            const form = this;
+                            const submitButton = form.querySelector('[type="submit"]');
+                            const originalText = submitButton.innerHTML;
+                            submitButton.disabled = true;
+                            submitButton.innerHTML = 'Updating...';
+
+                            try {
+                                const formData = new FormData(form);
+                                const jsonData = {};
+
+                                // Handle form data
+                                for (let [key, value] of formData.entries()) {
+                                    if (key === '_token' || key === '_method') continue;
+
+                                    if (key.includes('variants[')) {
+                                        const matches = key.match(/variants\[(\d+)\]\[([^\]]+)\]/);
+                                        if (matches) {
+                                            const [_, index, field] = matches;
+                                            if (!jsonData.variants) jsonData.variants = [];
+                                            if (!jsonData.variants[index]) jsonData.variants[index] = {};
+                                            jsonData.variants[index][field] = value;
+                                        }
+                                    } else {
+                                        jsonData[key] = value;
+                                    }
+                                }
+
+                                // Get express delivery countries from Alpine.js component
+                                const expressDeliveryComponent = document.getElementById('express-delivery-component').__x.$data;
+                                if (expressDeliveryComponent && expressDeliveryComponent.selected) {
+                                    jsonData.express_delivery_countries = expressDeliveryComponent.selected;
+                                } else {
+                                    jsonData.express_delivery_countries = [];
+                                }
+
+                                console.log('Submitting data:', jsonData); // Debug log
+
+                                const response = await fetch(form.action, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                        'Accept': 'application/json'
+                                    },
+                                    body: JSON.stringify({
+                                        ...jsonData,
+                                        _token: formData.get('_token'),
+                                        _method: 'PUT'
+                                    })
+                                });
+
+                                if (!response.ok) {
+                                    const errorData = await response.json();
+                                    throw new Error(errorData.message || 'Failed to update product');
+                                }
+
+                                const result = await response.json();
+
+                                if (result.success) {
+                                    // Show notification with product details
+                                    showNotification(result.message, 'success', {
+                                        name: result.product.name,
+                                        price: result.product.price,
+                                        stock: result.product.stock,
+                                        image: result.product.image_url || '/placeholder-image.jpg'
+                                    });
+
+                                    // Redirect to products list after a short delay
+                                    setTimeout(() => {
+                                        window.location.href = '{{ route("admin.products.index") }}';
+                                    }, 2000);
+                                } else {
+                                    throw new Error(result.message || 'Failed to update product');
+                                }
+                            } catch (error) {
+                                console.error('Error:', error);
+                                showNotification(error.message || 'Failed to update product', 'error');
+                            } finally {
+                                submitButton.disabled = false;
+                                submitButton.innerHTML = originalText;
                             }
                         });
-                    });
-                </script>
-                @endpush
 
-                @push('scripts')
-                <script>
-                    // Handle form submission
-                    document.getElementById('product-form').addEventListener('submit', async function(e) {
-                        e.preventDefault();
+                        function showNotification(message, type = 'success', productData = null) {
+                            const notification = document.createElement('div');
+                            notification.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg max-w-sm w-full bg-white border ${
+                                type === 'success' ? 'border-green-500' : 'border-red-500'
+                            }`;
 
-                        const form = this;
-                        const submitButton = form.querySelector('[type="submit"]');
-                        const originalText = submitButton.innerHTML;
-                        submitButton.disabled = true;
-                        submitButton.innerHTML = 'Updating...';
-
-                        try {
-                            const formData = new FormData(form);
-                            const jsonData = {};
-
-                            // Handle form data
-                            for (let [key, value] of formData.entries()) {
-                                if (key === '_token' || key === '_method') continue;
-
-                                if (key.includes('variants[')) {
-                                    const matches = key.match(/variants\[(\d+)\]\[([^\]]+)\]/);
-                                    if (matches) {
-                                        const [_, index, field] = matches;
-                                        if (!jsonData.variants) jsonData.variants = [];
-                                        if (!jsonData.variants[index]) jsonData.variants[index] = {};
-                                        jsonData.variants[index][field] = value;
-                                    }
-                                } else {
-                                    jsonData[key] = value;
-                                }
-                            }
-
-                            // Get express delivery countries from Alpine.js component
-                            const expressDeliveryComponent = document.getElementById('express-delivery-component').__x.$data;
-                            if (expressDeliveryComponent && expressDeliveryComponent.selected) {
-                                jsonData.express_delivery_countries = expressDeliveryComponent.selected;
-                            } else {
-                                jsonData.express_delivery_countries = [];
-                            }
-
-                            console.log('Submitting data:', jsonData); // Debug log
-
-                            const response = await fetch(form.action, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                                    'Accept': 'application/json'
-                                },
-                                body: JSON.stringify({
-                                    ...jsonData,
-                                    _token: formData.get('_token'),
-                                    _method: 'PUT'
-                                })
-                            });
-
-                            if (!response.ok) {
-                                const errorData = await response.json();
-                                throw new Error(errorData.message || 'Failed to update product');
-                            }
-
-                            const result = await response.json();
-
-                            if (result.success) {
-                                // Show notification with product details
-                                showNotification(result.message, 'success', {
-                                    name: result.product.name,
-                                    price: result.product.price,
-                                    stock: result.product.stock,
-                                    image: result.product.image_url || '/placeholder-image.jpg'
-                                });
-
-                                // Redirect to products list after a short delay
-                                setTimeout(() => {
-                                    window.location.href = '{{ route("admin.products.index") }}';
-                                }, 2000);
-                            } else {
-                                throw new Error(result.message || 'Failed to update product');
-                            }
-                        } catch (error) {
-                            console.error('Error:', error);
-                            showNotification(error.message || 'Failed to update product', 'error');
-                        } finally {
-                            submitButton.disabled = false;
-                            submitButton.innerHTML = originalText;
-                        }
-                    });
-
-                    function showNotification(message, type = 'success', productData = null) {
-                        const notification = document.createElement('div');
-                        notification.className = `fixed bottom-4 right-4 p-4 rounded-lg shadow-lg max-w-sm w-full bg-white border ${
-                            type === 'success' ? 'border-green-500' : 'border-red-500'
-                        }`;
-
-                        if (type === 'success' && productData) {
-                            notification.innerHTML = `
-                                <div class="flex items-start space-x-4">
-                                    <div class="flex-shrink-0 w-16 h-16">
-                                        <img src="${productData.image}" alt="${productData.name}"
-                                            class="w-full h-full object-cover rounded">
+                            if (type === 'success' && productData) {
+                                notification.innerHTML = `
+                                    <div class="flex items-start space-x-4">
+                                        <div class="flex-shrink-0 w-16 h-16">
+                                            <img src="${productData.image}" alt="${productData.name}"
+                                                class="w-full h-full object-cover rounded">
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-medium text-gray-900">
+                                                ${message}
+                                            </p>
+                                            <div class="mt-1 text-sm text-gray-500">
+                                                <p class="font-medium">${productData.name}</p>
+                                                <p>Price: $${productData.price}</p>
+                                                <p>Stock: ${productData.stock}</p>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="flex-shrink-0 ml-4" onclick="this.parentElement.parentElement.remove()">
+                                            <svg class="w-4 h-4 text-gray-400 hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                            </svg>
+                                        </button>
                                     </div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-medium text-gray-900">
+                                `;
+                            } else {
+                                notification.innerHTML = `
+                                    <div class="flex items-center justify-between">
+                                        <p class="text-sm ${type === 'success' ? 'text-green-600' : 'text-red-600'}">
                                             ${message}
                                         </p>
-                                        <div class="mt-1 text-sm text-gray-500">
-                                            <p class="font-medium">${productData.name}</p>
-                                            <p>Price: $${productData.price}</p>
-                                            <p>Stock: ${productData.stock}</p>
-                                        </div>
+                                        <button type="button" class="ml-4" onclick="this.parentElement.parentElement.remove()">
+                                            <svg class="w-4 h-4 text-gray-400 hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                            </svg>
+                                        </button>
                                     </div>
-                                    <button type="button" class="flex-shrink-0 ml-4" onclick="this.parentElement.parentElement.remove()">
-                                        <svg class="w-4 h-4 text-gray-400 hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            `;
-                        } else {
-                            notification.innerHTML = `
-                                <div class="flex items-center justify-between">
-                                    <p class="text-sm ${type === 'success' ? 'text-green-600' : 'text-red-600'}">
-                                        ${message}
-                                    </p>
-                                    <button type="button" class="ml-4" onclick="this.parentElement.parentElement.remove()">
-                                        <svg class="w-4 h-4 text-gray-400 hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            `;
+                                `;
+                            }
+
+                            document.body.appendChild(notification);
+                            setTimeout(() => notification.remove(), 5000);
                         }
+                    </script>
+                    @endpush
 
-                        document.body.appendChild(notification);
-                        setTimeout(() => notification.remove(), 5000);
-                    }
-                </script>
-                @endpush
+                    <!-- Package Information -->
+                    <div class="space-y-6 space-x-6 bg-white rounded-lg shadow-sm overflow-hidden p-4 border border-gray-200">
+                        <div>
+                            <h3 class="text-lg leading-6 font-medium text-gray-900 flex items-center">
+                                <svg class="h-5 w-5 text-gray-400 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                Package Information
+                            </h3>
+                            <p class="mt-1 text-sm text-gray-500">Enter the physical dimensions and weight of the product package.</p>
+                        </div>
 
-                <!-- Package Information -->
-                <div class="space-y-6 space-x-6 bg-white rounded-lg shadow-sm overflow-hidden p-4 border border-gray-200">
-                    <div>
-                        <h3 class="text-lg leading-6 font-medium text-gray-900 flex items-center">
-                            <svg class="h-5 w-5 text-gray-400 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                            Package Information
-                        </h3>
-                        <p class="mt-1 text-sm text-gray-500">Enter the physical dimensions and weight of the product package.</p>
+                        <div class="space-y-6">
+                            <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
+                                <label for="package_weight" class="block text-sm font-medium text-gray-700">Package Weight</label>
+                                <div class="mt-2 relative rounded-md shadow-sm">
+                                    <input type="number" step="0.01" name="package_weight" id="package_weight"
+                                        value="{{ old('package_weight', $product->package_weight) }}"
+                                        class="focus:ring-blue-500 focus:border-blue-500 block w-full pr-12 sm:text-sm border-gray-300 rounded-md"
+                                        placeholder="0.00">
+                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                        <span class="text-gray-500 sm:text-sm">kg</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
+                                <label for="package_length" class="block text-sm font-medium text-gray-700">Package Length</label>
+                                <div class="mt-2 relative rounded-md shadow-sm">
+                                    <input type="number" step="0.1" name="package_length" id="package_length"
+                                        value="{{ old('package_length', $product->package_length) }}"
+                                        class="focus:ring-blue-500 focus:border-blue-500 block w-full pr-12 sm:text-sm border-gray-300 rounded-md"
+                                        placeholder="0.0">
+                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                        <span class="text-gray-500 sm:text-sm">cm</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
+                                <label for="package_width" class="block text-sm font-medium text-gray-700">Package Width</label>
+                                <div class="mt-2 relative rounded-md shadow-sm">
+                                    <input type="number" step="0.1" name="package_width" id="package_width"
+                                        value="{{ old('package_width', $product->package_width) }}"
+                                        class="focus:ring-blue-500 focus:border-blue-500 block w-full pr-12 sm:text-sm border-gray-300 rounded-md"
+                                        placeholder="0.0">
+                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                        <span class="text-gray-500 sm:text-sm">cm</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
+                                <label for="package_height" class="block text-sm font-medium text-gray-700">Package Height</label>
+                                <div class="mt-2 relative rounded-md shadow-sm">
+                                    <input type="number" step="0.1" name="package_height" id="package_height"
+                                        value="{{ old('package_height', $product->package_height) }}"
+                                        class="focus:ring-blue-500 focus:border-blue-500 block w-full pr-12 sm:text-sm border-gray-300 rounded-md"
+                                        placeholder="0.0">
+                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                        <span class="text-gray-500 sm:text-sm">cm</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div><br><br>
+
+                    <!-- Form Actions -->
+                    <div class="fixed bottom-0 left-0 right-0 bg-gray-50 px-6 py-4 flex justify-end space-x-4 border-t border-gray-200">
+                        <button type="button" onclick="window.location.href='{{ url('/admin/products') }}'" class="px-4 py-2 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Cancel
+                        </button>
+
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Update Product
+                        </button>
                     </div>
-
-                    <div class="space-y-6">
-                        <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
-                            <label for="package_weight" class="block text-sm font-medium text-gray-700">Package Weight</label>
-                            <div class="mt-2 relative rounded-md shadow-sm">
-                                <input type="number" step="0.01" name="package_weight" id="package_weight"
-                                    value="{{ old('package_weight', $product->package_weight) }}"
-                                    class="focus:ring-blue-500 focus:border-blue-500 block w-full pr-12 sm:text-sm border-gray-300 rounded-md"
-                                    placeholder="0.00">
-                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                    <span class="text-gray-500 sm:text-sm">kg</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
-                            <label for="package_length" class="block text-sm font-medium text-gray-700">Package Length</label>
-                            <div class="mt-2 relative rounded-md shadow-sm">
-                                <input type="number" step="0.1" name="package_length" id="package_length"
-                                    value="{{ old('package_length', $product->package_length) }}"
-                                    class="focus:ring-blue-500 focus:border-blue-500 block w-full pr-12 sm:text-sm border-gray-300 rounded-md"
-                                    placeholder="0.0">
-                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                    <span class="text-gray-500 sm:text-sm">cm</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
-                            <label for="package_width" class="block text-sm font-medium text-gray-700">Package Width</label>
-                            <div class="mt-2 relative rounded-md shadow-sm">
-                                <input type="number" step="0.1" name="package_width" id="package_width"
-                                    value="{{ old('package_width', $product->package_width) }}"
-                                    class="focus:ring-blue-500 focus:border-blue-500 block w-full pr-12 sm:text-sm border-gray-300 rounded-md"
-                                    placeholder="0.0">
-                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                    <span class="text-gray-500 sm:text-sm">cm</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
-                            <label for="package_height" class="block text-sm font-medium text-gray-700">Package Height</label>
-                            <div class="mt-2 relative rounded-md shadow-sm">
-                                <input type="number" step="0.1" name="package_height" id="package_height"
-                                    value="{{ old('package_height', $product->package_height) }}"
-                                    class="focus:ring-blue-500 focus:border-blue-500 block w-full pr-12 sm:text-sm border-gray-300 rounded-md"
-                                    placeholder="0.0">
-                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                    <span class="text-gray-500 sm:text-sm">cm</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div><br><br>
-
-                <!-- Form Actions -->
-                <div class="fixed bottom-0 left-0 right-0 bg-gray-50 px-6 py-4 flex justify-end space-x-4 border-t border-gray-200">
-                    <button type="button" onclick="window.location.href='{{ url('/admin/products') }}'" class="px-4 py-2 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        Cancel
-                    </button>
-
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        Update Product
-                    </button>
                 </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
 

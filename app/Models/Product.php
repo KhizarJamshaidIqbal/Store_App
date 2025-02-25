@@ -48,7 +48,8 @@ class Product extends Model
         'package_height',
         'dangerous_goods',
         'is_draft',
-        'status'
+        'status',
+        'image'
     ];
 
     /**
@@ -69,7 +70,8 @@ class Product extends Model
         'express_delivery_countries' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'deleted_at' => 'datetime'
+        'deleted_at' => 'datetime',
+        'stock' => 'integer'
     ];
 
     /**

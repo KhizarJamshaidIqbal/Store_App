@@ -2,7 +2,24 @@
 @extends('admin.layouts.app')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
+<div class="container mx-auto px-4 py-6" x-data="{
+    showMediaModal: false,
+    selectedMedia: ['{{ $category->image ?? '' }}'],
+    previews: ['{{ $category->image ? asset('storage/' . $category->image) : '' }}'],
+    searchQuery: '',
+    filterType: 'all',
+    view: 'grid',
+
+    selectMedia(path, url) {
+        this.selectedMedia = [path];
+        this.previews = [url];
+    },
+
+    clearSelection() {
+        this.selectedMedia = [];
+        this.previews = [];
+    }
+}">
     <div class="max-w-4xl mx-auto">
         <div class="flex flex-col lg:flex-row gap-6">
             <!-- Left Column - Edit Form -->
@@ -15,7 +32,7 @@
                                 <h2 class="text-2xl font-semibold text-gray-800">Edit Category</h2>
                                 <p class="mt-1 text-sm text-gray-500">Update category information</p>
                             </div>
-                            <a href="{{ route('admin.categories.index') }}" 
+                            <a href="{{ route('admin.categories.index') }}"
                                class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors duration-200">
                                 <i class="fas fa-arrow-left mr-2"></i>
                                 Back
@@ -27,7 +44,7 @@
                     <form action="{{ route('admin.categories.update', $category->id) }}" method="POST" class="p-6 space-y-6" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
-                        
+
                         <!-- Category Name -->
                         <div class="space-y-2">
                             <label for="name" class="block text-sm font-medium text-gray-700">
@@ -37,9 +54,9 @@
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <i class="fas fa-tag text-gray-400"></i>
                                 </div>
-                                <input type="text" 
-                                       name="name" 
-                                       id="name" 
+                                <input type="text"
+                                       name="name"
+                                       id="name"
                                        value="{{ old('name', $category->name) }}"
                                        class="block w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('name') border-red-500 @enderror"
                                        placeholder="Enter category name">
@@ -58,25 +75,25 @@
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                     <i class="fas fa-folder-tree text-gray-400"></i>
                                 </div>
-                                <select name="parent_id" 
-                                        id="parent_id" 
+                                <select name="parent_id"
+                                        id="parent_id"
                                         class="block w-full pl-10 pr-10 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('parent_id') border-red-500 @enderror">
                                     <option value="">None (Top Level)</option>
                                     @foreach($categories->where('parent_id', null) as $parentCategory)
                                         @if($parentCategory->id !== $category->id)
-                                            <option value="{{ $parentCategory->id }}" 
+                                            <option value="{{ $parentCategory->id }}"
                                                     {{ old('parent_id', $category->parent_id) == $parentCategory->id ? 'selected' : '' }}>
                                                 {{ $parentCategory->name }}
                                             </option>
                                             @foreach($parentCategory->children as $childCategory)
                                                 @if($childCategory->id !== $category->id)
-                                                    <option value="{{ $childCategory->id }}" 
+                                                    <option value="{{ $childCategory->id }}"
                                                             {{ old('parent_id', $category->parent_id) == $childCategory->id ? 'selected' : '' }}>
                                                         &nbsp;&nbsp;&nbsp;&nbsp;└─ {{ $childCategory->name }}
                                                     </option>
                                                     @foreach($childCategory->children as $grandChild)
                                                         @if($grandChild->id !== $category->id)
-                                                            <option value="{{ $grandChild->id }}" 
+                                                            <option value="{{ $grandChild->id }}"
                                                                     {{ old('parent_id', $category->parent_id) == $grandChild->id ? 'selected' : '' }}>
                                                                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ {{ $grandChild->name }}
                                                             </option>
@@ -102,41 +119,28 @@
                                 Category Image
                             </label>
                             <div class="mt-1 space-y-4">
-                                @if($category->image)
-                                <div class="current-image mb-4">
-                                    <p class="text-sm text-gray-500 mb-2">Current Image:</p>
-                                    <div class="relative w-48 h-48 border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
-                                        <img src="{{ asset('storage/' . $category->image) }}"
-                                             alt="{{ $category->name }}" 
-                                             class="w-full h-full object-contain"
-                                             onerror="this.src='{{ asset('images/placeholder.png') }}'; this.classList.add('opacity-50');">
-                                    </div>
-                                </div>
-                                @endif
-                                
-                                <div class="flex flex-col space-y-2">
-                                    <div class="flex items-center">
-                                        <label for="image" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:text-gray-500 focus:outline-none focus:border-blue-400 focus:shadow-outline-blue active:text-gray-800 active:bg-gray-50 transition ease-in-out duration-150 cursor-pointer">
-                                            Choose File
-                                            <input type="file" 
-                                                   name="image" 
-                                                   id="image" 
-                                                   accept="image/*"
-                                                   class="hidden"
-                                                   onchange="updateFileName(this)">
-                                        </label>
-                                        <span class="ml-3 text-sm text-gray-500" id="selected-file">No file chosen</span>
-                                    </div>
-                                    
-                                    <div class="mt-2">
-                                        <div class="relative w-48 h-48 border border-gray-200 rounded-lg overflow-hidden bg-gray-50 hidden" id="preview-container">
-                                            <img id="image-preview" src="#" alt="Preview" class="w-full h-full object-contain">
-                                        </div>
-                                    </div>
-                                    
-                                    <p class="text-sm text-gray-500 mt-2">
-                                        Upload a new image to replace the current one. Leave empty to keep the current image.
-                                    </p>
+                                <!-- Hidden input to store selected media path -->
+                                <input type="hidden"
+                                       name="image"
+                                       :value="selectedMedia[0]">
+
+                                <button type="button"
+                                        @click="showMediaModal = true"
+                                        class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors duration-200">
+                                    <i class="fas fa-image mr-2"></i>
+                                    Select Image
+                                </button>
+
+                                <!-- Preview selected image -->
+                                <div class="mt-2" x-show="previews[0]">
+                                    <img :src="previews[0]"
+                                         class="max-w-xs rounded-lg shadow-sm"
+                                         alt="Selected image">
+                                    <button type="button"
+                                            @click="clearSelection()"
+                                            class="mt-2 text-sm text-red-600 hover:text-red-700">
+                                        Remove Image
+                                    </button>
                                 </div>
                             </div>
                             @error('image')
@@ -153,9 +157,9 @@
                                 <div class="absolute top-3 left-3 pointer-events-none">
                                     <i class="fas fa-align-left text-gray-400"></i>
                                 </div>
-                                <textarea name="description" 
-                                          id="description" 
-                                          rows="4" 
+                                <textarea name="description"
+                                          id="description"
+                                          rows="4"
                                           class="block w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('description') border-red-500 @enderror"
                                           placeholder="Enter category description">{{ old('description', $category->description) }}</textarea>
                             </div>
@@ -169,11 +173,11 @@
                             <div class="flex items-center">
                                 <label for="status" class="relative inline-flex items-center cursor-pointer">
                                     <input type="hidden" name="status" value="0">
-                                    <input type="checkbox" 
-                                           name="status" 
-                                           id="status" 
+                                    <input type="checkbox"
+                                           name="status"
+                                           id="status"
                                            value="1"
-                                           class="sr-only peer" 
+                                           class="sr-only peer"
                                            {{ $category->status ? 'checked' : '' }}>
                                     <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
                                     <span class="ml-3 text-sm font-medium text-gray-700">Active Status</span>
@@ -234,20 +238,133 @@
                     </h3>
                     <p class="text-sm text-gray-600 mb-4">
                         <i class="fas fa-exclamation-circle text-yellow-500 mr-2"></i>
-                        Warning: Deleting this category will also delete all its subcategories. 
+                        Warning: Deleting this category will also delete all its subcategories.
                         This action cannot be undone.
                     </p>
-                    <form action="{{ route('admin.categories.destroy', $category->id) }}" 
-                          method="POST" 
+                    <form action="{{ route('admin.categories.destroy', $category->id) }}"
+                          method="POST"
                           onsubmit="return confirm('Are you sure you want to delete this category? This action cannot be undone.');">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" 
+                        <button type="submit"
                                 class="w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors duration-200 flex items-center justify-center">
                             <i class="fas fa-trash-alt mr-2"></i>
                             Delete Category
                         </button>
                     </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Media Selection Modal -->
+    <div x-show="showMediaModal"
+         class="fixed inset-0 z-50 overflow-hidden"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+
+        <div class="absolute inset-0 bg-gray-500 bg-opacity-75 backdrop-blur-sm"></div>
+
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-6xl"
+                     @click.away="showMediaModal = false">
+
+                    <!-- Modal Header -->
+                    <div class="bg-white px-6 py-4 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-medium text-gray-900">Select Media</h3>
+                            <div class="flex items-center gap-4">
+                                <!-- View Toggle -->
+                                <div class="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+                                    <button @click="view = 'grid'"
+                                            :class="{'bg-white shadow': view === 'grid'}"
+                                            class="p-2 rounded-lg transition-all duration-200">
+                                        <i class="fas fa-grid-2"></i>
+                                    </button>
+                                    <button @click="view = 'list'"
+                                            :class="{'bg-white shadow': view === 'list'}"
+                                            class="p-2 rounded-lg transition-all duration-200">
+                                        <i class="fas fa-list"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Search -->
+                                <div class="relative">
+                                    <input type="text"
+                                           x-model="searchQuery"
+                                           placeholder="Search media..."
+                                           class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                                </div>
+
+                                <!-- Filter -->
+                                <select x-model="filterType"
+                                        class="border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="all">All Types</option>
+                                    <option value="image">Images</option>
+                                    <option value="video">Videos</option>
+                                    <option value="document">Documents</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Body -->
+                    <div class="bg-gray-50 p-6">
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 max-h-[60vh] overflow-y-auto">
+                            @foreach(\App\Models\Media::where('mime_type', 'like', 'image/%')->latest()->get() as $media)
+                                <div class="relative group cursor-pointer bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-200"
+                                     @click="selectMedia('{{ $media->path }}', '{{ Storage::url($media->path) }}')">
+                                    <img src="{{ Storage::url($media->path) }}"
+                                         alt="{{ $media->name }}"
+                                         class="w-full aspect-square object-cover">
+
+                                    <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                                        <div class="transform scale-0 group-hover:scale-100 transition-transform duration-200">
+                                            <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center">
+                                                <i class="fas fa-plus text-blue-600"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="p-2 border-t border-gray-100">
+                                        <p class="text-xs font-medium truncate">{{ $media->name }}</p>
+                                        <p class="text-xs text-gray-500">{{ number_format($media->size / 1024, 2) }} KB</p>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm text-gray-600">
+                                <span x-text="selectedMedia.length"></span> items selected
+                            </span>
+                            <button @click="clearSelection"
+                                    x-show="selectedMedia.length > 0"
+                                    class="text-sm text-red-600 hover:text-red-700">
+                                Clear
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <a href="{{ route('admin.media.create') }}"
+                               class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors duration-200">
+                                Upload New Media
+                            </a>
+                            <button type="button"
+                                    @click="showMediaModal = false"
+                                    class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors duration-200">
+                                Done
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -272,11 +389,11 @@
     function updateFileName(input) {
         const fileName = input.files[0]?.name || 'No file chosen';
         document.getElementById('selected-file').textContent = fileName;
-        
+
         // Handle preview
         const preview = document.getElementById('image-preview');
         const previewContainer = document.getElementById('preview-container');
-        
+
         if (input.files && input.files[0]) {
             const reader = new FileReader();
             reader.onload = function(e) {
